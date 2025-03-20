@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Hash Generator - Online Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">File Hash Generator</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">Select File</label>
+                    <input type="file" class="form-control" id="fileInput">
+                    <div class="form-text">Maximum file size: 100MB</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Hash Algorithms</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="md5" id="md5Check" checked>
+                        <label class="form-check-label" for="md5Check">MD5</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="sha1" id="sha1Check" checked>
+                        <label class="form-check-label" for="sha1Check">SHA-1</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="sha256" id="sha256Check" checked>
+                        <label class="form-check-label" for="sha256Check">SHA-256</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="sha512" id="sha512Check">
+                        <label class="form-check-label" for="sha512Check">SHA-512</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="generateBtn" disabled>Generate Hash</button>
+            </div>
+        </div>
+
+        <div class="card mt-4" id="resultCard" style="display: none;">
+            <div class="card-body">
+                <h5 class="card-title">Hash Results</h5>
+                <div class="mb-3" id="fileInfo"></div>
+                <div id="hashResults"></div>
+                <button class="btn btn-secondary mt-3" id="copyAllBtn">Copy All Results</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultCard = document.getElementById('resultCard');
+        const fileInfo = document.getElementById('fileInfo');
+        const hashResults = document.getElementById('hashResults');
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        
+        fileInput.addEventListener('change', () => {
+            generateBtn.disabled = !fileInput.files.length;
+            resultCard.style.display = 'none';
+        });
+
+        async function calculateFileHash(file, algorithm) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+                    let hash;
+                    switch(algorithm) {
+                        case 'md5':
+                            hash = CryptoJS.MD5(wordArray);
+                            break;
+                        case 'sha1':
+                            hash = CryptoJS.SHA1(wordArray);
+                            break;
+                        case 'sha256':
+                            hash = CryptoJS.SHA256(wordArray);
+                            break;
+                        case 'sha512':
+                            hash = CryptoJS.SHA512(wordArray);
+                            break;
+                    }
+                    resolve(hash.toString());
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        generateBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+
+            try {
+                const algorithms = ['md5', 'sha1', 'sha256', 'sha512']
+                    .filter(alg => document.getElementById(alg + 'Check').checked);
+
+                fileInfo.innerHTML = `
+                    <strong>File Name:</strong> ${file.name}<br>
+                    <strong>File Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB
+                `;
+
+                const results = [];
+                for (const algorithm of algorithms) {
+                    const hash = await calculateFileHash(file, algorithm);
+                    results.push({ algorithm: algorithm.toUpperCase(), hash });
+                }
+
+                hashResults.innerHTML = results.map(result => `
+                    <div class="mb-3">
+                        <label class="form-label">${result.algorithm}</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="${result.hash}" readonly>
+                            <button class="btn btn-outline-secondary copy-btn" data-hash="${result.hash}">Copy</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                resultCard.style.display = 'block';
+
+                // Add click handlers for copy buttons
+                document.querySelectorAll('.copy-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(btn.dataset.hash);
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = 'Copied!';
+                        setTimeout(() => btn.innerHTML = originalText, 1000);
+                    });
+                });
+
+                copyAllBtn.addEventListener('click', () => {
+                    const allResults = results.map(r => `${r.algorithm}: ${r.hash}`).join('\n');
+                    navigator.clipboard.writeText(allResults);
+                    copyAllBtn.innerHTML = 'Copied All!';
+                    setTimeout(() => copyAllBtn.innerHTML = 'Copy All Results', 1000);
+                });
+
+            } catch (error) {
+                console.error('Error generating hash:', error);
+                hashResults.innerHTML = '<div class="alert alert-danger">Error generating hash. Please try again.</div>';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = 'Generate Hash';
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

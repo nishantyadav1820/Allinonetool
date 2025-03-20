@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Checker - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .text-input {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .result-card {
+            display: none;
+        }
+        .error {
+            background-color: rgba(255, 0, 0, 0.1);
+            text-decoration: underline wavy red;
+            padding: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+        .error:hover::after {
+            content: attr(data-error);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+        .suggestion {
+            color: #28a745;
+            cursor: pointer;
+        }
+        .suggestion:hover {
+            text-decoration: underline;
+        }
+        .correction-card {
+            border-left: 4px solid #dc3545;
+            margin-bottom: 1rem;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .error-type {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .error-context {
+            font-size: 0.875rem;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .error-suggestion {
+            font-size: 0.875rem;
+            color: #28a745;
+        }
+        .language-selector {
+            max-width: 200px;
+        }
+        .stats-badge {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            border-radius: 0.5rem;
+        }
+        .writing-tips {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Grammar Checker</h1>
+                        
+                        <div class="tool-section">
+                            <div class="mb-3">
+                                <select class="form-select language-selector" id="languageSelect">
+                                    <option value="en-US">English (US)</option>
+                                    <option value="en-GB">English (UK)</option>
+                                    <option value="en-AU">English (Australia)</option>
+                                    <option value="en-CA">English (Canada)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkGrammar" checked>
+                                    <label class="form-check-label" for="checkGrammar">Grammar</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkSpelling" checked>
+                                    <label class="form-check-label" for="checkSpelling">Spelling</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkPunctuation" checked>
+                                    <label class="form-check-label" for="checkPunctuation">Punctuation</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="checkStyle" checked>
+                                    <label class="form-check-label" for="checkStyle">Style</label>
+                                </div>
+                            </div>
+
+                            <textarea 
+                                class="form-control text-input mb-3" 
+                                id="textInput" 
+                                placeholder="Enter or paste your text here to check grammar..."
+                            ></textarea>
+
+                            <div class="text-center mb-4">
+                                <button class="btn btn-primary" id="checkBtn">
+                                    <i class="bi bi-check-circle me-2"></i>Check Grammar
+                                </button>
+                                <button class="btn btn-outline-secondary ms-2" id="clearBtn">
+                                    <i class="bi bi-trash me-2"></i>Clear
+                                </button>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress mb-4" style="display: none;" id="progressBar">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+
+                            <!-- Results Section -->
+                            <div class="result-card" id="resultSection">
+                                <div class="card bg-light mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Analysis Results</h5>
+                                        <div class="row text-center">
+                                            <div class="col-md-3 col-6">
+                                                <div class="stats-badge bg-primary text-white">
+                                                    <div id="grammarScore">100%</div>
+                                                    <small>Overall Score</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <div class="stats-badge bg-warning text-dark">
+                                                    <div id="issuesFound">0</div>
+                                                    <small>Issues Found</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <div class="stats-badge bg-info text-white">
+                                                    <div id="wordsChecked">0</div>
+                                                    <small>Words</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <div class="stats-badge bg-success text-white">
+                                                    <div id="readabilityScore">0</div>
+                                                    <small>Readability</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="correctedText" class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Text with Corrections</h5>
+                                        <div id="textWithHighlights"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Detailed Corrections</h5>
+                                        <div id="correctionsList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Enter or paste your text in the text area</li>
+                            <li>Click "Check Grammar" to analyze</li>
+                            <li>Review highlighted errors and suggestions</li>
+                            <li>Click on highlighted text to see correction options</li>
+                            <li>Apply suggested corrections as needed</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Advanced grammar analysis</li>
+                            <li>Spelling error detection</li>
+                            <li>Style suggestions</li>
+                            <li>Punctuation checking</li>
+                            <li>Context-aware corrections</li>
+                            <li>Privacy-focused - no data storage</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textInput = document.getElementById('textInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const progressBar = document.getElementById('progressBar');
+            const resultSection = document.getElementById('resultSection');
+            const grammarScore = document.getElementById('grammarScore');
+            const issuesFound = document.getElementById('issuesFound');
+            const wordsChecked = document.getElementById('wordsChecked');
+            const readabilityScore = document.getElementById('readabilityScore');
+            const textWithHighlights = document.getElementById('textWithHighlights');
+            const correctionsList = document.getElementById('correctionsList');
+
+            // Enhanced grammar rules and patterns
+            const grammarRules = {
+                subjectVerbAgreement: {
+                    pattern: /\b(I|he|she|it)\s+(are|were|have been)\b|\b(they|we|you)\s+(is|was|has been)\b/gi,
+                    message: "Subject-verb agreement error",
+                    category: "Grammar"
+                },
+                articleUsage: {
+                    pattern: /\b(a)\s+[aeiou]|\b(an)\s+[^aeiou]/gi,
+                    message: "Incorrect article usage",
+                    category: "Grammar"
+                },
+                prepositionUsage: {
+                    pattern: /\b(in|on|at)\s+(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/gi,
+                    message: "Incorrect preposition with day of the week",
+                    category: "Grammar"
+                },
+                commonConfusions: {
+                    words: {
+                        'their': { correct: 'there', context: 'location', category: 'Grammar' },
+                        'there': { correct: 'their', context: 'possession', category: 'Grammar' },
+                        'they\'re': { correct: 'their/there', context: 'contraction', category: 'Grammar' },
+                        'your': { correct: "you're", context: 'contraction', category: 'Grammar' },
+                        'its': { correct: "it's", context: 'contraction', category: 'Grammar' },
+                        'affect': { correct: 'effect', context: 'noun', category: 'Vocabulary' },
+                        'effect': { correct: 'affect', context: 'verb', category: 'Vocabulary' },
+                        'then': { correct: 'than', context: 'comparison', category: 'Grammar' },
+                        'too': { correct: 'to/two', context: 'direction/number', category: 'Grammar' },
+                        'loose': { correct: 'lose', context: 'verb', category: 'Spelling' },
+                        'whose': { correct: "who's", context: 'contraction', category: 'Grammar' },
+                        'accept': { correct: 'except', context: 'exclusion', category: 'Vocabulary' },
+                        'advice': { correct: 'advise', context: 'verb form', category: 'Grammar' },
+                        'alot': { correct: 'a lot', context: 'two words', category: 'Spelling' },
+                        'already': { correct: 'all ready', context: 'preparedness', category: 'Grammar' },
+                        'altogether': { correct: 'all together', context: 'in unison', category: 'Grammar' },
+                        'among': { correct: 'between', context: 'two items', category: 'Grammar' },
+                        'between': { correct: 'among', context: 'three or more', category: 'Grammar' }
+                    }
+                },
+                punctuationRules: {
+                    comma: {
+                        pattern: /\b(however|moreover|furthermore|therefore|nevertheless)\b(?![,])/gi,
+                        message: "Missing comma after transitional phrase",
+                        category: "Punctuation"
+                    },
+                    semicolon: {
+                        pattern: /[^;]\s*\b(however|moreover|therefore)\b\s*[^,]/gi,
+                        message: "Consider using a semicolon before this transition",
+                        category: "Punctuation"
+                    }
+                },
+                styleIssues: {
+                    wordiness: {
+                        patterns: {
+                            'at this point in time': 'now',
+                            'due to the fact that': 'because',
+                            'in order to': 'to',
+                            'in the event that': 'if',
+                            'prior to': 'before',
+                            'subsequent to': 'after'
+                        },
+                        category: "Style"
+                    },
+                    passiveVoice: {
+                        pattern: /\b(am|is|are|was|were|be|been|being)\s+\w+ed\b/gi,
+                        message: "Consider using active voice",
+                        category: "Style"
+                    }
+                }
+            };
+
+            async function checkGrammar(text) {
+                progressBar.style.display = 'block';
+                const progress = progressBar.querySelector('.progress-bar');
+                
+                // Simulate processing stages
+                const stages = ['Analyzing text', 'Checking grammar', 'Reviewing style', 'Generating suggestions'];
+                const errors = [];
+                
+                for (let i = 0; i < stages.length; i++) {
+                    progress.style.width = ((i + 1) * 25) + '%';
+                    progress.setAttribute('aria-valuenow', (i + 1) * 25);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+                const words = text.trim().split(/\s+/);
+                let readabilityScore = 100;
+
+                // Check subject-verb agreement
+                const svErrors = text.match(grammarRules.subjectVerbAgreement.pattern) || [];
+                svErrors.forEach(error => {
+                    errors.push({
+                        type: 'Grammar',
+                        error: error,
+                        message: 'Subject-verb agreement error',
+                        suggestions: [error.replace(/are|were|have been/gi, 'is').replace(/is|was|has been/gi, 'are')]
+                    });
+                    readabilityScore -= 5;
+                });
+
+                // Check common word confusions
+                words.forEach((word, index) => {
+                    const lowerWord = word.toLowerCase();
+                    const confusion = grammarRules.commonConfusions.words[lowerWord];
+                    
+                    if (confusion) {
+                        errors.push({
+                            type: confusion.category,
+                            error: word,
+                            message: `Consider using "${confusion.correct}" for ${confusion.context}`,
+                            suggestions: [confusion.correct],
+                            context: `...${words.slice(Math.max(0, index - 3), index).join(' ')} `
+                                    + `<mark>${word}</mark>`
+                                    + ` ${words.slice(index + 1, index + 4).join(' ')}...`
+                        });
+                        readabilityScore -= 3;
+                    }
+                });
+
+                // Check punctuation
+                const punctErrors = text.match(grammarRules.punctuationRules.comma.pattern) || [];
+                punctErrors.forEach(error => {
+                    errors.push({
+                        type: 'Punctuation',
+                        error: error,
+                        message: 'Missing comma after transitional phrase',
+                        suggestions: [error.replace(/(\b\w+\b)/, '$1,')]
+                    });
+                    readabilityScore -= 2;
+                });
+
+                // Check style issues
+                Object.entries(grammarRules.styleIssues.wordiness.patterns).forEach(([wordy, concise]) => {
+                    const regex = new RegExp(wordy, 'gi');
+                    const matches = text.match(regex) || [];
+                    matches.forEach(match => {
+                        errors.push({
+                            type: 'Style',
+                            error: match,
+                            message: 'Wordy expression',
+                            suggestions: [concise]
+                        });
+                        readabilityScore -= 1;
+                    });
+                });
+
+                // Ensure readability score stays within 0-100
+                readabilityScore = Math.max(0, Math.min(100, readabilityScore));
+
+                return {
+                    errors,
+                    wordCount: words.length,
+                    readabilityScore,
+                    grammarScore: Math.max(0, 100 - (errors.length * 5))
+                };
+            }
+
+            function displayResults(results) {
+                resultSection.style.display = 'block';
+                grammarScore.textContent = `${results.grammarScore}%`;
+                issuesFound.textContent = results.errors.length;
+                wordsChecked.textContent = results.wordCount;
+                readabilityScore.textContent = `${results.readabilityScore}%`;
+
+                // Display text with highlights
+                let highlightedText = textInput.value;
+                results.errors.forEach(error => {
+                    const regex = new RegExp(`\\b${error.error}\\b`, 'g');
+                    highlightedText = highlightedText.replace(regex, 
+                        `<span class="error" data-error="${error.message}">${error.error}</span>`);
+                });
+                textWithHighlights.innerHTML = highlightedText;
+
+                // Display corrections list
+                correctionsList.innerHTML = results.errors.map(error => `
+                    <div class="correction-card">
+                        <div class="error-type">${error.type}</div>
+                        <div class="error-context">${error.context || error.error}</div>
+                        <div class="error-suggestion">
+                            Suggestion: ${error.suggestions.map(s => 
+                                `<span class="suggestion">${s}</span>`).join(' or ')}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers for suggestions
+                document.querySelectorAll('.suggestion').forEach(suggestion => {
+                    suggestion.addEventListener('click', () => {
+                        const correction = suggestion.textContent;
+                        textInput.value = textInput.value.replace(
+                            new RegExp(`\\b${suggestion.closest('.correction-card').querySelector('.error-context').textContent}\\b`),
+                            correction
+                        );
+                    });
+                });
+            }
+
+            // Event handlers
+            checkBtn.addEventListener('click', async () => {
+                const text = textInput.value.trim();
+                if (!text) {
+                    alert('Please enter some text to check.');
+                    return;
+                }
+
+                resultSection.style.display = 'none';
+                const results = await checkGrammar(text);
+                displayResults(results);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                textInput.value = '';
+                resultSection.style.display = 'none';
+                progressBar.style.display = 'none';
+            });
+
+            // Add click handler for error highlights
+            textWithHighlights.addEventListener('click', (e) => {
+                if (e.target.classList.contains('error')) {
+                    const suggestion = e.target.getAttribute('data-error');
+                    if (confirm(`Would you like to apply this correction?\n${suggestion}`)) {
+                        const newText = e.target.textContent.replace(
+                            e.target.textContent,
+                            suggestion.replace('Suggestion: ', '')
+                        );
+                        e.target.textContent = newText;
+                        e.target.classList.remove('error');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

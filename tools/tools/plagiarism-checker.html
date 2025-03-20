@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plagiarism Checker - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .text-input {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .result-card {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffd7d7;
+            padding: 2px;
+            border-radius: 3px;
+        }
+        .source-link {
+            color: #0d6efd;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Plagiarism Checker</h1>
+                        
+                        <div class="tool-section">
+                            <textarea 
+                                class="form-control text-input mb-3" 
+                                id="textInput" 
+                                placeholder="Enter or paste your text here to check for plagiarism..."
+                            ></textarea>
+
+                            <div class="text-center mb-4">
+                                <button class="btn btn-primary" id="checkBtn">
+                                    <i class="bi bi-search me-2"></i>Check for Plagiarism
+                                </button>
+                                <button class="btn btn-outline-secondary ms-2" id="clearBtn">
+                                    <i class="bi bi-trash me-2"></i>Clear
+                                </button>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress mb-4" style="display: none;" id="progressBar">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+
+                            <!-- Results Section -->
+                            <div class="result-card" id="resultSection">
+                                <div class="card bg-light mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Analysis Results</h5>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <p class="mb-1">Originality Score: <span id="originalityScore" class="fw-bold">100%</span></p>
+                                                <p class="mb-0">Matched Content: <span id="matchedContent" class="fw-bold">0%</span></p>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <p class="mb-1">Words Analyzed: <span id="wordsAnalyzed" class="fw-bold">0</span></p>
+                                                <p class="mb-0">Sources Found: <span id="sourcesFound" class="fw-bold">0</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="highlightedText" class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Analyzed Text</h5>
+                                        <div id="textWithHighlights"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Sources</h5>
+                                        <div id="sourcesList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Enter or paste your text in the text area</li>
+                            <li>Click "Check for Plagiarism" to analyze</li>
+                            <li>Review the originality score and matched content</li>
+                            <li>Examine highlighted sections for potential matches</li>
+                            <li>Check the sources list for matching content</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Advanced text analysis</li>
+                            <li>Multiple source checking</li>
+                            <li>Detailed originality report</li>
+                            <li>Highlighted matches</li>
+                            <li>Source attribution</li>
+                            <li>Privacy-focused - no data storage</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textInput = document.getElementById('textInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const progressBar = document.getElementById('progressBar');
+            const resultSection = document.getElementById('resultSection');
+            const originalityScore = document.getElementById('originalityScore');
+            const matchedContent = document.getElementById('matchedContent');
+            const wordsAnalyzed = document.getElementById('wordsAnalyzed');
+            const sourcesFound = document.getElementById('sourcesFound');
+            const textWithHighlights = document.getElementById('textWithHighlights');
+            const sourcesList = document.getElementById('sourcesList');
+
+            // Simulated plagiarism check function
+            async function checkPlagiarism(text) {
+                // Show progress bar
+                progressBar.style.display = 'block';
+                const progress = progressBar.querySelector('.progress-bar');
+                
+                // Simulate API call and processing
+                for (let i = 0; i <= 100; i += 20) {
+                    progress.style.width = i + '%';
+                    progress.setAttribute('aria-valuenow', i);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+                // Simulate results (in real implementation, this would come from an API)
+                const words = text.trim().split(/\s+/);
+                const totalWords = words.length;
+                
+                // Simple demonstration - marks every 5th word as "plagiarized"
+                const matches = [];
+                words.forEach((word, index) => {
+                    if (index % 5 === 0 && word.length > 3) {
+                        matches.push({
+                            word: word,
+                            index: index,
+                            source: `https://example.com/source${index + 1}`
+                        });
+                    }
+                });
+
+                const matchPercentage = (matches.length / totalWords * 100).toFixed(1);
+                
+                return {
+                    originalityScore: (100 - matchPercentage).toFixed(1),
+                    matchedContent: matchPercentage,
+                    wordsAnalyzed: totalWords,
+                    sourcesFound: matches.length,
+                    matches: matches
+                };
+            }
+
+            // Update UI with results
+            function displayResults(results) {
+                originalityScore.textContent = results.originalityScore + '%';
+                matchedContent.textContent = results.matchedContent + '%';
+                wordsAnalyzed.textContent = results.wordsAnalyzed;
+                sourcesFound.textContent = results.matches.length;
+
+                // Highlight matched text
+                const words = textInput.value.split(/\s+/);
+                const highlightedWords = words.map((word, index) => {
+                    const match = results.matches.find(m => m.index === index);
+                    if (match) {
+                        return `<span class="highlight" title="Found in: ${match.source}">${word}</span>`;
+                    }
+                    return word;
+                });
+                textWithHighlights.innerHTML = highlightedWords.join(' ');
+
+                // Display sources
+                const sourcesHtml = results.matches.map(match => `
+                    <div class="mb-2">
+                        <i class="bi bi-link-45deg"></i>
+                        <a href="${match.source}" target="_blank" class="source-link">
+                            ${match.source}
+                        </a>
+                        <span class="text-muted"> - Contains "${match.word}"</span>
+                    </div>
+                `).join('');
+                sourcesList.innerHTML = sourcesHtml;
+
+                // Show results
+                progressBar.style.display = 'none';
+                resultSection.style.display = 'block';
+            }
+
+            // Event handlers
+            checkBtn.addEventListener('click', async () => {
+                const text = textInput.value.trim();
+                if (!text) {
+                    alert('Please enter some text to check.');
+                    return;
+                }
+
+                resultSection.style.display = 'none';
+                const results = await checkPlagiarism(text);
+                displayResults(results);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                textInput.value = '';
+                resultSection.style.display = 'none';
+                progressBar.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPC Pay Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .calculator {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .info-box {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .info-box h6 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        .info-box ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        .info-box li:last-child {
+            margin-bottom: 0;
+        }
+        .nav-pills .nav-link {
+            margin-right: 5px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">CPC Pay Calculator</h1>
+        
+        <div class="calculator">
+            <ul class="nav nav-pills mb-4" id="cpcTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="7cpc-tab" data-bs-toggle="pill" data-bs-target="#7cpc" type="button" role="tab">7th CPC</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="6cpc-tab" data-bs-toggle="pill" data-bs-target="#6cpc" type="button" role="tab">6th CPC</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="cpcTabContent">
+                <!-- 7th CPC Calculator -->
+                <div class="tab-pane fade show active" id="7cpc" role="tabpanel">
+                    <div class="info-box">
+                        <h6><i class="bi bi-info-circle"></i> 7th CPC Pay Structure</h6>
+                        <ul>
+                            <li>Basic Pay = Pay in Pay Matrix</li>
+                            <li>DA: Updated periodically (currently at 42%)</li>
+                            <li>HRA: 24% (X), 16% (Y), 8% (Z) class cities</li>
+                            <li>TA: Based on pay level and city classification</li>
+                        </ul>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Pay Level</th>
+                                        <th>Grade Pay (6th CPC)</th>
+                                        <th>Pay Range</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Level 1</td>
+                                        <td>1800</td>
+                                        <td>18000-56900</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 2</td>
+                                        <td>1900</td>
+                                        <td>19900-63200</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 3</td>
+                                        <td>2000</td>
+                                        <td>21700-69100</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 4</td>
+                                        <td>2400</td>
+                                        <td>25500-81100</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 5</td>
+                                        <td>2800</td>
+                                        <td>29200-92300</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 6</td>
+                                        <td>4200</td>
+                                        <td>35400-112400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 7</td>
+                                        <td>4600</td>
+                                        <td>44900-142400</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 8</td>
+                                        <td>4800</td>
+                                        <td>47600-151100</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 9</td>
+                                        <td>5400</td>
+                                        <td>53100-167800</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Level 10</td>
+                                        <td>5400 (PB-3)</td>
+                                        <td>56100-177500</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form id="7cpcForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="7payLevel" class="form-label">Pay Level</label>
+                                <select class="form-select" id="7payLevel" required>
+                                    <option value="">Select Pay Level</option>
+                                    <option value="1">Level 1 (18000-56900)</option>
+                                    <option value="2">Level 2 (19900-63200)</option>
+                                    <option value="3">Level 3 (21700-69100)</option>
+                                    <option value="4">Level 4 (25500-81100)</option>
+                                    <option value="5">Level 5 (29200-92300)</option>
+                                    <option value="6">Level 6 (35400-112400)</option>
+                                    <option value="7">Level 7 (44900-142400)</option>
+                                    <option value="8">Level 8 (47600-151100)</option>
+                                    <option value="9">Level 9 (53100-167800)</option>
+                                    <option value="10">Level 10 (56100-177500)</option>
+                                </select>
+                                <div class="form-text">Choose your pay level as per 7th CPC</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="7basicPay" class="form-label">Basic Pay (₹)</label>
+                                <input type="number" class="form-control" id="7basicPay" required min="18000" step="100">
+                                <div class="form-text">Enter your basic pay as per pay matrix</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="7da" class="form-label">DA Rate (%)</label>
+                                <input type="number" class="form-control" id="7da" required value="42" min="0" max="100" step="0.5">
+                                <div class="form-text">Current DA rate: 42%</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="7cityClass" class="form-label">City Classification</label>
+                                <select class="form-select" id="7cityClass" required>
+                                    <option value="X">X (Metro)</option>
+                                    <option value="Y">Y (Large Cities)</option>
+                                    <option value="Z">Z (Others)</option>
+                                </select>
+                                <div class="form-text">For HRA calculation</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="7ta" class="form-label">Transport Allowance (₹)</label>
+                                <input type="number" class="form-control" id="7ta" required min="0" step="100">
+                                <div class="form-text">Based on pay level and city</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Calculate Salary</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 6th CPC Calculator -->
+                <div class="tab-pane fade" id="6cpc" role="tabpanel">
+                    <div class="info-box">
+                        <h6><i class="bi bi-info-circle"></i> 6th CPC Pay Structure</h6>
+                        <ul>
+                            <li>Basic Pay = Pay Band + Grade Pay</li>
+                            <li>DA: Updated periodically</li>
+                            <li>HRA: 30% (X), 20% (Y), 10% (Z) class cities</li>
+                            <li>Transport Allowance varies by grade pay</li>
+                        </ul>
+                    </div>
+
+                    <form id="6cpcForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="6payBand" class="form-label">Pay Band</label>
+                                <select class="form-select" id="6payBand" required>
+                                    <option value="">Select Pay Band</option>
+                                    <option value="PB1">PB-1 (5200-20200)</option>
+                                    <option value="PB2">PB-2 (9300-34800)</option>
+                                    <option value="PB3">PB-3 (15600-39100)</option>
+                                    <option value="PB4">PB-4 (37400-67000)</option>
+                                </select>
+                                <div class="form-text">Select your pay band</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="6gradePay" class="form-label">Grade Pay (₹)</label>
+                                <select class="form-select" id="6gradePay" required>
+                                    <option value="">Select Grade Pay</option>
+                                    <option value="1800">1800</option>
+                                    <option value="1900">1900</option>
+                                    <option value="2000">2000</option>
+                                    <option value="2400">2400</option>
+                                    <option value="2800">2800</option>
+                                    <option value="4200">4200</option>
+                                    <option value="4600">4600</option>
+                                    <option value="4800">4800</option>
+                                    <option value="5400">5400</option>
+                                    <option value="6600">6600</option>
+                                    <option value="7600">7600</option>
+                                    <option value="8700">8700</option>
+                                    <option value="8900">8900</option>
+                                    <option value="10000">10000</option>
+                                </select>
+                                <div class="form-text">Select your grade pay</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="6basicPay" class="form-label">Pay in Pay Band (₹)</label>
+                                <input type="number" class="form-control" id="6basicPay" required min="5200" step="100">
+                                <div class="form-text">Enter your pay in pay band</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="6da" class="form-label">DA Rate (%)</label>
+                                <input type="number" class="form-control" id="6da" required value="42" min="0" max="100" step="0.5">
+                                <div class="form-text">Current DA rate: 42%</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="6cityClass" class="form-label">City Classification</label>
+                                <select class="form-select" id="6cityClass" required>
+                                    <option value="X">X (Metro)</option>
+                                    <option value="Y">Y (Large Cities)</option>
+                                    <option value="Z">Z (Others)</option>
+                                </select>
+                                <div class="form-text">For HRA calculation</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="6ta" class="form-label">Transport Allowance (₹)</label>
+                                <input type="number" class="form-control" id="6ta" required min="0" step="100">
+                                <div class="form-text">Based on grade pay and city</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Calculate Salary</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="result" id="result" style="display: none;">
+                <h5 class="mb-3">Salary Breakdown</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Basic Components</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="result-item">
+                                    <span>Basic Pay:</span>
+                                    <strong id="displayBasicPay">₹0</strong>
+                                </div>
+                                <div class="result-item">
+                                    <span>Grade Pay (6th CPC Equivalent):</span>
+                                    <strong id="displayGradePay">₹0</strong>
+                                </div>
+                                <div class="result-item">
+                                    <span>Total Basic:</span>
+                                    <strong id="displayTotalBasic">₹0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Allowances</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="result-item">
+                                    <span>Dearness Allowance (DA):</span>
+                                    <strong id="displayDA">₹0</strong>
+                                </div>
+                                <div class="result-item">
+                                    <span>House Rent Allowance (HRA):</span>
+                                    <strong id="displayHRA">₹0</strong>
+                                </div>
+                                <div class="result-item">
+                                    <span>Transport Allowance:</span>
+                                    <strong id="displayTA">₹0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Total Emoluments</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="result-item">
+                                    <span>Monthly Gross:</span>
+                                    <strong id="displayMonthlyGross">₹0</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="result-item">
+                                    <span>Annual Gross (incl. DA):</span>
+                                    <strong id="displayAnnualGross">₹0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Calculate HRA percentage based on city class
+        function getHRAPercentage(cityClass, isSixthCPC) {
+            if (isSixthCPC) {
+                switch(cityClass) {
+                    case 'X': return 30;
+                    case 'Y': return 20;
+                    case 'Z': return 10;
+                }
+            } else {
+                switch(cityClass) {
+                    case 'X': return 24;
+                    case 'Y': return 16;
+                    case 'Z': return 8;
+                }
+            }
+        }
+
+        // Get grade pay equivalent for 7th CPC level
+        function getGradePayForLevel(level) {
+            const gradePay = {
+                1: 1800,
+                2: 1900,
+                3: 2000,
+                4: 2400,
+                5: 2800,
+                6: 4200,
+                7: 4600,
+                8: 4800,
+                9: 5400,
+                10: 5400
+            };
+            return gradePay[level] || 0;
+        }
+
+        // 7th CPC Calculator
+        document.getElementById('7cpcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const level = parseInt(document.getElementById('7payLevel').value);
+            const basicPay = parseFloat(document.getElementById('7basicPay').value);
+            const daRate = parseFloat(document.getElementById('7da').value);
+            const cityClass = document.getElementById('7cityClass').value;
+            const ta = parseFloat(document.getElementById('7ta').value);
+
+            const gradePay = getGradePayForLevel(level);
+            const totalBasic = basicPay;
+            const da = (totalBasic * daRate) / 100;
+            const hra = (totalBasic * getHRAPercentage(cityClass, false)) / 100;
+            const monthlyGross = totalBasic + da + hra + ta;
+            const annualGross = monthlyGross * 12;
+
+            // Update results
+            document.getElementById('displayBasicPay').textContent = formatCurrency(basicPay);
+            document.getElementById('displayGradePay').textContent = formatCurrency(gradePay) + ' (Level ' + level + ')';
+            document.getElementById('displayTotalBasic').textContent = formatCurrency(totalBasic);
+            document.getElementById('displayDA').textContent = formatCurrency(da) + ` (${daRate}%)`;
+            document.getElementById('displayHRA').textContent = formatCurrency(hra) + ` (${getHRAPercentage(cityClass, false)}%)`;
+            document.getElementById('displayTA').textContent = formatCurrency(ta);
+            document.getElementById('displayMonthlyGross').textContent = formatCurrency(monthlyGross);
+            document.getElementById('displayAnnualGross').textContent = formatCurrency(annualGross);
+
+            document.getElementById('result').style.display = 'block';
+        });
+
+        // 6th CPC Calculator
+        document.getElementById('6cpcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const payBandPay = parseFloat(document.getElementById('6basicPay').value);
+            const gradePay = parseFloat(document.getElementById('6gradePay').value);
+            const daRate = parseFloat(document.getElementById('6da').value);
+            const cityClass = document.getElementById('6cityClass').value;
+            const ta = parseFloat(document.getElementById('6ta').value);
+
+            const totalBasic = payBandPay + gradePay;
+            const da = (totalBasic * daRate) / 100;
+            const hra = (totalBasic * getHRAPercentage(cityClass, true)) / 100;
+            const monthlyGross = totalBasic + da + hra + ta;
+            const annualGross = monthlyGross * 12;
+
+            // Update results
+            document.getElementById('displayBasicPay').textContent = formatCurrency(payBandPay);
+            document.getElementById('displayGradePay').textContent = formatCurrency(gradePay);
+            document.getElementById('displayTotalBasic').textContent = formatCurrency(totalBasic);
+            document.getElementById('displayDA').textContent = formatCurrency(da) + ` (${daRate}%)`;
+            document.getElementById('displayHRA').textContent = formatCurrency(hra) + ` (${getHRAPercentage(cityClass, true)}%)`;
+            document.getElementById('displayTA').textContent = formatCurrency(ta);
+            document.getElementById('displayMonthlyGross').textContent = formatCurrency(monthlyGross);
+            document.getElementById('displayAnnualGross').textContent = formatCurrency(annualGross);
+
+            document.getElementById('result').style.display = 'block';
+        });
+
+        // Reset handlers
+        document.getElementById('7cpcForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+        });
+
+        document.getElementById('6cpcForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+        });
+
+        // Set transport allowance based on pay level/grade pay
+        document.getElementById('7payLevel').addEventListener('change', function() {
+            const level = parseInt(this.value);
+            const cityClass = document.getElementById('7cityClass').value;
+            let ta = 0;
+
+            if (level >= 9) {
+                ta = cityClass === 'X' ? 7200 : 3600;
+            } else if (level >= 3) {
+                ta = cityClass === 'X' ? 3600 : 1800;
+            } else {
+                ta = cityClass === 'X' ? 1350 : 900;
+            }
+
+            document.getElementById('7ta').value = ta;
+        });
+
+        document.getElementById('6gradePay').addEventListener('change', function() {
+            const gradePay = parseInt(this.value);
+            const cityClass = document.getElementById('6cityClass').value;
+            let ta = 0;
+
+            if (gradePay >= 5400) {
+                ta = cityClass === 'X' ? 3200 : 1600;
+            } else if (gradePay >= 4200) {
+                ta = cityClass === 'X' ? 1600 : 800;
+            } else {
+                ta = cityClass === 'X' ? 600 : 400;
+            }
+
+            document.getElementById('6ta').value = ta;
+        });
+
+        // Update TA when city class changes
+        document.getElementById('7cityClass').addEventListener('change', function() {
+            document.getElementById('7payLevel').dispatchEvent(new Event('change'));
+        });
+
+        document.getElementById('6cityClass').addEventListener('change', function() {
+            document.getElementById('6gradePay').dispatchEvent(new Event('change'));
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                // Ctrl+Enter to calculate
+                const activeForm = document.querySelector('.tab-pane.active form');
+                if (activeForm) {
+                    activeForm.querySelector('button[type="submit"]').click();
+                }
+            } else if (e.key === 'Escape') {
+                // Escape to clear
+                const activeForm = document.querySelector('.tab-pane.active form');
+                if (activeForm) {
+                    activeForm.querySelector('button[type="reset"]').click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

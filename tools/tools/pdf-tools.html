@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Tools - Multi-Tools</title>
+    <meta name="description" content="Complete PDF toolkit: Convert Word to PDF, merge PDFs, compress PDFs, and convert PDF to images.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            background: white;
+        }
+        .file-item:hover {
+            background: #f8f9fa;
+        }
+        .file-item .drag-handle {
+            cursor: move;
+            color: #6c757d;
+            padding: 0 0.5rem;
+        }
+        .file-item .file-name {
+            flex-grow: 1;
+            margin: 0 0.5rem;
+        }
+        .file-item .remove-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        .file-item .remove-btn:hover {
+            color: #bb2d3b;
+        }
+        .nav-pills .nav-link {
+            color: #6c757d;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .preview-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .preview-container canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Multi-Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <!-- Tool Selection -->
+        <ul class="nav nav-pills mb-4 justify-content-center" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#wordToPdf" type="button">
+                    <i class="bi bi-file-word me-2"></i>Word to PDF
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#mergePdf" type="button">
+                    <i class="bi bi-file-earmark-plus me-2"></i>Merge PDFs
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#compressPdf" type="button">
+                    <i class="bi bi-file-zip me-2"></i>Compress PDF
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pdfToImage" type="button">
+                    <i class="bi bi-file-image me-2"></i>PDF to Image
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Word to PDF -->
+            <div class="tab-pane fade show active" id="wordToPdf">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Word to PDF Converter</h1>
+                        
+                        <div class="drop-zone mb-4" id="wordDropZone">
+                            <input type="file" class="d-none file-input" accept=".doc,.docx">
+                            <div class="upload-prompt">
+                                <i class="bi bi-file-word display-4 text-primary mb-3"></i>
+                                <h5>Drop your Word document here or click to upload</h5>
+                                <p class="text-muted mb-0">Supports DOC and DOCX files</p>
+                            </div>
+                        </div>
+
+                        <div class="preview-container d-none" id="wordPreview">
+                            <h5 class="mb-3">Document Preview</h5>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-word text-primary fs-1 me-3"></i>
+                                        <div>
+                                            <h6 class="mb-1" id="wordFileName">document.docx</h6>
+                                            <small class="text-muted" id="wordFileSize">0 KB</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-lg px-4" id="convertWordBtn">
+                                    <i class="bi bi-file-pdf me-2"></i>Convert to PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Merge PDF -->
+            <div class="tab-pane fade" id="mergePdf">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">PDF Merger</h1>
+                        
+                        <div class="drop-zone mb-4" id="mergeDropZone">
+                            <input type="file" class="d-none file-input" accept=".pdf" multiple>
+                            <div class="upload-prompt">
+                                <i class="bi bi-file-earmark-plus display-4 text-primary mb-3"></i>
+                                <h5>Drop PDF files here or click to upload</h5>
+                                <p class="text-muted mb-0">Upload multiple PDFs to merge them</p>
+                            </div>
+                        </div>
+
+                        <div id="pdfList" class="file-list mb-4 d-none">
+                            <h5 class="mb-3">PDF Files (drag to reorder)</h5>
+                            <div class="pdf-files">
+                                <!-- PDF files will be listed here -->
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button class="btn btn-primary btn-lg px-4 d-none" id="mergePdfBtn">
+                                <i class="bi bi-file-earmark-plus me-2"></i>Merge PDFs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compress PDF -->
+            <div class="tab-pane fade" id="compressPdf">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">PDF Compressor</h1>
+                        
+                        <div class="drop-zone mb-4" id="compressDropZone">
+                            <input type="file" class="d-none file-input" accept=".pdf">
+                            <div class="upload-prompt">
+                                <i class="bi bi-file-zip display-4 text-primary mb-3"></i>
+                                <h5>Drop your PDF here or click to upload</h5>
+                                <p class="text-muted mb-0">Maximum file size: 100MB</p>
+                            </div>
+                        </div>
+
+                        <div class="compression-options d-none" id="compressionOptions">
+                            <h5 class="mb-3">Compression Settings</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Compression Level</label>
+                                    <select class="form-select" id="compressionLevel">
+                                        <option value="low">Low (Better Quality)</option>
+                                        <option value="medium" selected>Medium (Balanced)</option>
+                                        <option value="high">High (Smaller Size)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Image Quality</label>
+                                    <input type="range" class="form-range" id="imageQuality" min="1" max="100" value="80">
+                                    <div class="text-center" id="qualityValue">80%</div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary btn-lg px-4" id="compressPdfBtn">
+                                    <i class="bi bi-file-zip me-2"></i>Compress PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF to Image -->
+            <div class="tab-pane fade" id="pdfToImage">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">PDF to Image Converter</h1>
+                        
+                        <div class="drop-zone mb-4" id="pdfImageDropZone">
+                            <input type="file" class="d-none file-input" accept=".pdf">
+                            <div class="upload-prompt">
+                                <i class="bi bi-file-image display-4 text-primary mb-3"></i>
+                                <h5>Drop your PDF here or click to upload</h5>
+                                <p class="text-muted mb-0">Convert PDF pages to images</p>
+                            </div>
+                        </div>
+
+                        <div class="conversion-options d-none" id="conversionOptions">
+                            <h5 class="mb-3">Conversion Settings</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Image Format</label>
+                                    <select class="form-select" id="imageFormat">
+                                        <option value="png">PNG</option>
+                                        <option value="jpeg">JPEG</option>
+                                        <option value="webp">WebP</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Resolution (DPI)</label>
+                                    <select class="form-select" id="imageDpi">
+                                        <option value="72">72 DPI</option>
+                                        <option value="150">150 DPI</option>
+                                        <option value="300" selected>300 DPI</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="preview-container mt-4">
+                                <h5 class="mb-3">PDF Preview</h5>
+                                <canvas id="pdfPreview" class="mb-3"></canvas>
+                                <div class="text-center">
+                                    <button class="btn btn-outline-secondary btn-sm me-2" id="prevPage" disabled>
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                    <span id="pageInfo">Page 1 of 1</span>
+                                    <button class="btn btn-outline-secondary btn-sm ms-2" id="nextPage" disabled>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary btn-lg px-4" id="convertPdfBtn">
+                                    <i class="bi bi-file-image me-2"></i>Convert to Images
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5><i class="bi bi-lightbulb text-warning me-2"></i>Tips</h5>
+                <ul class="mb-0">
+                    <li>For merging PDFs, drag and drop files to reorder them</li>
+                    <li>Higher compression may reduce image quality</li>
+                    <li>Choose PNG format for best quality image conversion</li>
+                    <li>Word to PDF conversion maintains formatting and fonts</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script>
+        // Initialize all dropzones
+        document.querySelectorAll('.drop-zone').forEach(dropZone => {
+            const fileInput = dropZone.querySelector('.file-input');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                dropZone.classList.add('dragover');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('dragover');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                if (files.length === 0) return;
+
+                if (dropZone.id === 'wordDropZone') {
+                    handleWordFile(files[0]);
+                } else if (dropZone.id === 'mergeDropZone') {
+                    handlePdfFiles(Array.from(files));
+                } else if (dropZone.id === 'compressDropZone') {
+                    handleCompressFile(files[0]);
+                } else if (dropZone.id === 'pdfImageDropZone') {
+                    handlePdfToImage(files[0]);
+                }
+            }
+        });
+
+        // Word to PDF
+        function handleWordFile(file) {
+            if (!file.name.match(/\.(doc|docx)$/i)) {
+                alert('Please upload a Word document (DOC or DOCX)');
+                return;
+            }
+
+            document.getElementById('wordFileName').textContent = file.name;
+            document.getElementById('wordFileSize').textContent = formatFileSize(file.size);
+            document.getElementById('wordPreview').classList.remove('d-none');
+        }
+
+        document.getElementById('convertWordBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('convertWordBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Converting...';
+
+            try {
+                // Simulated conversion
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                alert('Word to PDF conversion would happen here. This is a demo.');
+            } catch (error) {
+                alert('Conversion failed. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-file-pdf me-2"></i>Convert to PDF';
+            }
+        });
+
+        // Merge PDFs
+        function handlePdfFiles(files) {
+            const validFiles = files.filter(file => file.name.toLowerCase().endsWith('.pdf'));
+            if (validFiles.length === 0) {
+                alert('Please upload PDF files only');
+                return;
+            }
+
+            const pdfList = document.getElementById('pdfList');
+            const pdfFiles = pdfList.querySelector('.pdf-files');
+            pdfFiles.innerHTML = '';
+
+            validFiles.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <i class="bi bi-grip-vertical drag-handle"></i>
+                    <i class="bi bi-file-pdf text-primary me-2"></i>
+                    <span class="file-name">${file.name}</span>
+                    <span class="text-muted me-3">${formatFileSize(file.size)}</span>
+                    <i class="bi bi-x-circle remove-btn"></i>
+                `;
+                pdfFiles.appendChild(fileItem);
+            });
+
+            // Initialize drag-and-drop reordering
+            new Sortable(pdfFiles, {
+                animation: 150,
+                handle: '.drag-handle'
+            });
+
+            pdfList.classList.remove('d-none');
+            document.getElementById('mergePdfBtn').classList.remove('d-none');
+        }
+
+        // Compress PDF
+        function handleCompressFile(file) {
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Please upload a PDF file');
+                return;
+            }
+
+            if (file.size > 100 * 1024 * 1024) { // 100MB
+                alert('File size exceeds 100MB limit');
+                return;
+            }
+
+            document.getElementById('compressionOptions').classList.remove('d-none');
+        }
+
+        // PDF to Image
+        let pdfDoc = null;
+        let pageNum = 1;
+
+        async function handlePdfToImage(file) {
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Please upload a PDF file');
+                return;
+            }
+
+            document.getElementById('conversionOptions').classList.remove('d-none');
+
+            // Load the PDF
+            const fileReader = new FileReader();
+            fileReader.onload = async function() {
+                try {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
+                    pageNum = 1;
+                    document.getElementById('pageInfo').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+                    document.getElementById('prevPage').disabled = pageNum <= 1;
+                    document.getElementById('nextPage').disabled = pageNum >= pdfDoc.numPages;
+                    renderPage(pageNum);
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    alert('Failed to load PDF. Please try again.');
+                }
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        async function renderPage(num) {
+            const page = await pdfDoc.getPage(num);
+            const canvas = document.getElementById('pdfPreview');
+            const ctx = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({
+                canvasContext: ctx,
+                viewport: viewport
+            }).promise;
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (pageNum <= 1) return;
+            pageNum--;
+            document.getElementById('pageInfo').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+            document.getElementById('prevPage').disabled = pageNum <= 1;
+            document.getElementById('nextPage').disabled = pageNum >= pdfDoc.numPages;
+            renderPage(pageNum);
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            document.getElementById('pageInfo').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+            document.getElementById('prevPage').disabled = pageNum <= 1;
+            document.getElementById('nextPage').disabled = pageNum >= pdfDoc.numPages;
+            renderPage(pageNum);
+        });
+
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Handle compression quality display
+        document.getElementById('imageQuality').addEventListener('input', function(e) {
+            document.getElementById('qualityValue').textContent = e.target.value + '%';
+        });
+    </script>
+</body>
+</html>

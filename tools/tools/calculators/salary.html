@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Calculator - Calculate Net Salary and Tax Deductions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .calculator {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        .tax-slab {
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Salary Calculator</h1>
+        
+        <div class="calculator">
+            <form id="salaryForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="basicSalary" class="form-label">Basic Salary (₹/month)</label>
+                        <input type="number" class="form-control" id="basicSalary" required min="1000" step="1000" value="50000">
+                        <div class="form-text">Usually 40-50% of CTC</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="hra" class="form-label">HRA (₹/month)</label>
+                        <input type="number" class="form-control" id="hra" required min="0" step="1000" value="20000">
+                        <div class="form-text">Usually 40-50% of basic salary</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="specialAllowance" class="form-label">Special Allowance (₹/month)</label>
+                        <input type="number" class="form-control" id="specialAllowance" required min="0" step="1000" value="10000">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="otherAllowances" class="form-label">Other Allowances (₹/month)</label>
+                        <input type="number" class="form-control" id="otherAllowances" required min="0" step="1000" value="5000">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="epfContribution" class="form-label">EPF Contribution (₹/month)</label>
+                        <input type="number" class="form-control" id="epfContribution" required min="0" step="100" value="1800">
+                        <div class="form-text">12% of basic salary (employee contribution)</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="professionalTax" class="form-label">Professional Tax (₹/month)</label>
+                        <input type="number" class="form-control" id="professionalTax" required min="0" step="100" value="200">
+                        <div class="form-text">Varies by state, typically ₹200/month</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="taxSavingInvestments" class="form-label">Tax Saving Investments (80C) (₹/year)</label>
+                        <input type="number" class="form-control" id="taxSavingInvestments" required min="0" step="1000" value="150000">
+                        <div class="form-text">Maximum deduction limit: ₹1,50,000 per year (includes EPF, PPF, ELSS, etc.)</div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Calculate Salary</button>
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                </div>
+            </form>
+
+            <div class="result" id="result" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="result-item">
+                            <span>Gross Monthly Salary:</span>
+                            <span id="grossSalary">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Monthly Deductions:</span>
+                            <span id="totalDeductions">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Monthly Tax:</span>
+                            <span id="monthlyTax">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Net Monthly Salary:</span>
+                            <span id="netSalary" class="fw-bold">₹0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5>Annual Breakdown</h5>
+                        <div class="result-item">
+                            <span>Annual Gross Income:</span>
+                            <span id="annualGross">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Annual Deductions:</span>
+                            <span id="annualDeductions">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Taxable Income:</span>
+                            <span id="taxableIncome">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Annual Tax:</span>
+                            <span id="annualTax">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Annual Net Income:</span>
+                            <span id="annualNet" class="fw-bold">₹0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tax-slab">
+                <h5>Income Tax Slabs (FY 2023-24) - New Tax Regime</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Income Range</th>
+                                <th>Tax Rate</th>
+                                <th>Maximum Tax in Slab</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Up to ₹3,00,000</td>
+                                <td>Nil</td>
+                                <td>₹0</td>
+                            </tr>
+                            <tr>
+                                <td>₹3,00,001 to ₹6,00,000</td>
+                                <td>5%</td>
+                                <td>₹15,000</td>
+                            </tr>
+                            <tr>
+                                <td>₹6,00,001 to ₹9,00,000</td>
+                                <td>10%</td>
+                                <td>₹30,000</td>
+                            </tr>
+                            <tr>
+                                <td>₹9,00,001 to ₹12,00,000</td>
+                                <td>15%</td>
+                                <td>₹45,000</td>
+                            </tr>
+                            <tr>
+                                <td>₹12,00,001 to ₹15,00,000</td>
+                                <td>20%</td>
+                                <td>₹60,000</td>
+                            </tr>
+                            <tr>
+                                <td>Above ₹15,00,000</td>
+                                <td>30%</td>
+                                <td>No limit</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> Note: A 4% Health and Education Cess is applicable on the total tax amount.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let salaryChart = null;
+
+        // Format currency function
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Reset form handler
+        document.getElementById('salaryForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+            if (salaryChart) {
+                salaryChart.destroy();
+                salaryChart = null;
+            }
+        });
+
+        function updateResults(monthlyGross, monthlyDeductions, monthlyTax, monthlyNet, 
+                            annualGross, annualDeductions, taxableIncome, annualTax, annualNet) {
+            document.getElementById('grossSalary').textContent = formatCurrency(monthlyGross);
+            document.getElementById('totalDeductions').textContent = formatCurrency(monthlyDeductions);
+            document.getElementById('monthlyTax').textContent = formatCurrency(monthlyTax);
+            document.getElementById('netSalary').textContent = formatCurrency(monthlyNet);
+            
+            document.getElementById('annualGross').textContent = formatCurrency(annualGross);
+            document.getElementById('annualDeductions').textContent = formatCurrency(annualDeductions);
+            document.getElementById('taxableIncome').textContent = formatCurrency(taxableIncome);
+            document.getElementById('annualTax').textContent = formatCurrency(annualTax);
+            document.getElementById('annualNet').textContent = formatCurrency(annualNet);
+        }
+
+        document.getElementById('salaryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateSalary();
+        });
+
+        function calculateSalary() {
+            // Get monthly values
+            const basicSalary = parseFloat(document.getElementById('basicSalary').value);
+            const hra = parseFloat(document.getElementById('hra').value);
+            const specialAllowance = parseFloat(document.getElementById('specialAllowance').value);
+            const otherAllowances = parseFloat(document.getElementById('otherAllowances').value);
+            const epf = parseFloat(document.getElementById('epfContribution').value);
+            const professionalTax = parseFloat(document.getElementById('professionalTax').value);
+            const taxSavingInvestments = parseFloat(document.getElementById('taxSavingInvestments').value);
+
+            // Calculate monthly and annual values
+            const monthlyGross = basicSalary + hra + specialAllowance + otherAllowances;
+            const monthlyDeductions = epf + professionalTax;
+            const annualGross = monthlyGross * 12;
+            const annualDeductions = monthlyDeductions * 12;
+
+            // Calculate taxable income
+            const standardDeduction = 50000;
+            const taxableIncome = Math.max(0, annualGross - standardDeduction - taxSavingInvestments);
+
+            // Calculate tax
+            const annualTax = calculateTax(taxableIncome);
+            const monthlyTax = annualTax / 12;
+
+            // Calculate net salary
+            const monthlyNet = monthlyGross - monthlyDeductions - monthlyTax;
+            const annualNet = monthlyNet * 12;
+
+            // Update results
+            updateResults(monthlyGross, monthlyDeductions, monthlyTax, monthlyNet, 
+                        annualGross, annualDeductions, taxableIncome, annualTax, annualNet);
+
+            document.getElementById('result').style.display = 'block';
+
+            // Update chart
+            updateChart(monthlyNet, monthlyTax, monthlyDeductions);
+        }
+
+        function calculateTax(income) {
+            let tax = 0;
+
+            if (income <= 300000) {
+                tax = 0;
+            } else if (income <= 600000) {
+                tax = (income - 300000) * 0.05;
+            } else if (income <= 900000) {
+                tax = 15000 + (income - 600000) * 0.10;
+            } else if (income <= 1200000) {
+                tax = 45000 + (income - 900000) * 0.15;
+            } else if (income <= 1500000) {
+                tax = 90000 + (income - 1200000) * 0.20;
+            } else {
+                tax = 150000 + (income - 1500000) * 0.30;
+            }
+
+            return tax;
+        }
+
+        function updateChart(netSalary, tax, deductions) {
+            const ctx = document.getElementById('salaryChart').getContext('2d');
+            
+            if (salaryChart) {
+                salaryChart.destroy();
+            }
+            
+            salaryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Net Salary', 'Tax', 'Deductions'],
+                    datasets: [{
+                        data: [netSalary, tax, deductions],
+                        backgroundColor: ['#198754', '#dc3545', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

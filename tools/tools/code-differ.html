@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Diff Checker - Compare Code Changes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        .CodeMirror {
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .diff-container {
+            overflow-x: auto;
+        }
+        .diff-line {
+            padding: 2px 5px;
+            white-space: pre;
+            font-family: monospace;
+        }
+        .diff-added {
+            background-color: #e6ffe6;
+            color: #1e7e34;
+        }
+        .diff-removed {
+            background-color: #ffe6e6;
+            color: #dc3545;
+        }
+        .diff-unchanged {
+            color: #666;
+        }
+        .diff-header {
+            background-color: #f8f9fa;
+            padding: 5px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .line-number {
+            color: #999;
+            margin-right: 10px;
+            user-select: none;
+        }
+        .diff-stats {
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .toolbar {
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Code Diff Checker</h1>
+
+        <div class="toolbar">
+            <div class="row">
+                <div class="col-md-4">
+                    <select class="form-select" id="languageSelect">
+                        <option value="text">Plain Text</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="xml">XML</option>
+                        <option value="sql">SQL</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="diffModeSelect">
+                        <option value="chars">Character-level diff</option>
+                        <option value="words">Word-level diff</option>
+                        <option value="lines" selected>Line-level diff</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="ignoreWhitespace" checked>
+                        <label class="form-check-label" for="ignoreWhitespace">
+                            Ignore whitespace
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Original Code</h5>
+                <textarea id="originalCode"></textarea>
+            </div>
+            <div class="col-md-6">
+                <h5>Modified Code</h5>
+                <textarea id="modifiedCode"></textarea>
+            </div>
+        </div>
+
+        <div class="text-center my-4">
+            <button class="btn btn-primary" id="compareBtn">Compare Code</button>
+            <button class="btn btn-secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div id="diffStats" class="diff-stats" style="display: none;"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Differences</h5>
+                <div id="diffOutput" class="diff-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff/5.1.0/diff.min.js"></script>
+    <script>
+        // Initialize CodeMirror editors
+        const originalEditor = CodeMirror.fromTextArea(document.getElementById("originalCode"), {
+            lineNumbers: true,
+            mode: "text",
+            theme: "default",
+            lineWrapping: true
+        });
+
+        const modifiedEditor = CodeMirror.fromTextArea(document.getElementById("modifiedCode"), {
+            lineNumbers: true,
+            mode: "text",
+            theme: "default",
+            lineWrapping: true
+        });
+
+        // Example code
+        originalEditor.setValue(`function calculateTotal(items) {
+    let total = 0;
+    for (let item of items) {
+        total += item.price;
+    }
+    return total;
+}`);
+
+        modifiedEditor.setValue(`function calculateTotal(items) {
+    let total = 0;
+    for (let item of items) {
+        if (item.discount) {
+            total += item.price * (1 - item.discount);
+        } else {
+            total += item.price;
+        }
+    }
+    return total.toFixed(2);
+}`);
+
+        // Language change handler
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            originalEditor.setOption('mode', mode);
+            modifiedEditor.setOption('mode', mode);
+        });
+
+        function compareCode() {
+            const original = originalEditor.getValue();
+            const modified = modifiedEditor.getValue();
+            const diffMode = document.getElementById('diffModeSelect').value;
+            const ignoreWhitespace = document.getElementById('ignoreWhitespace').checked;
+
+            let diff;
+            if (diffMode === 'chars') {
+                diff = Diff.diffChars(original, modified);
+            } else if (diffMode === 'words') {
+                diff = Diff.diffWords(original, modified);
+            } else {
+                diff = Diff.diffLines(original, modified, {
+                    ignoreWhitespace: ignoreWhitespace
+                });
+            }
+
+            // Calculate statistics
+            let added = 0, removed = 0, unchanged = 0;
+            diff.forEach(part => {
+                const count = part.value.split('\n').length - 1;
+                if (part.added) added += count || 1;
+                else if (part.removed) removed += count || 1;
+                else unchanged += count || 1;
+            });
+
+            // Update stats
+            document.getElementById('diffStats').style.display = 'block';
+            document.getElementById('diffStats').innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Changes:</strong> 
+                    <span class="text-success">+${added} added</span>, 
+                    <span class="text-danger">-${removed} removed</span>, 
+                    ${unchanged} unchanged
+                </div>
+            `;
+
+            // Generate diff output
+            const diffOutput = document.getElementById('diffOutput');
+            diffOutput.innerHTML = '';
+            let lineNumber = 1;
+
+            diff.forEach(part => {
+                const element = document.createElement('div');
+                element.classList.add('diff-line');
+                
+                if (part.added) {
+                    element.classList.add('diff-added');
+                    element.innerHTML = `<span class="line-number">+${lineNumber}</span>` + part.value;
+                    lineNumber++;
+                } else if (part.removed) {
+                    element.classList.add('diff-removed');
+                    element.innerHTML = `<span class="line-number">-${lineNumber}</span>` + part.value;
+                    lineNumber++;
+                } else {
+                    element.classList.add('diff-unchanged');
+                    element.innerHTML = `<span class="line-number">${lineNumber}</span>` + part.value;
+                    lineNumber++;
+                }
+
+                diffOutput.appendChild(element);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('compareBtn').addEventListener('click', compareCode);
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            originalEditor.setValue('');
+            modifiedEditor.setValue('');
+            document.getElementById('diffOutput').innerHTML = '';
+            document.getElementById('diffStats').style.display = 'none';
+        });
+
+        // Auto-compare on input changes (with debounce)
+        let timeout;
+        const debounce = (func, wait) => {
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        };
+
+        const debouncedCompare = debounce(compareCode, 500);
+
+        originalEditor.on('change', debouncedCompare);
+        modifiedEditor.on('change', debouncedCompare);
+    </script>
+</body>
+</html>

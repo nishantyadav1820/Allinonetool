@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 Encoder/Decoder - Tools Hub</title>
+    <meta name="description" content="Free online Base64 encoder and decoder. Convert text to Base64 and decode Base64 to text instantly.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .converter-card {
+            transition: all 0.3s ease;
+        }
+        .converter-card:hover {
+            transform: translateY(-5px);
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        .copy-tooltip {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: none;
+        }
+        .copy-tooltip.show {
+            display: block;
+            animation: fadeOut 2s forwards;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .textarea-container {
+            position: relative;
+        }
+        .char-count {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Tools Hub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Base64 Encoder/Decoder</h1>
+                        
+                        <div class="row g-4">
+                            <!-- Input Text -->
+                            <div class="col-md-6">
+                                <div class="card converter-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-3">Input Text</h5>
+                                        <div class="textarea-container">
+                                            <textarea class="form-control" id="inputText" rows="8" 
+                                                placeholder="Enter text to encode or Base64 to decode..."></textarea>
+                                            <span class="char-count" id="inputCount">0 characters</span>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-primary me-2" onclick="encode()">
+                                                <i class="bi bi-arrow-right me-2"></i>Encode
+                                            </button>
+                                            <button class="btn btn-primary" onclick="decode()">
+                                                <i class="bi bi-arrow-left me-2"></i>Decode
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Output Text -->
+                            <div class="col-md-6">
+                                <div class="card converter-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-3">Output</h5>
+                                        <div class="textarea-container">
+                                            <button class="btn btn-outline-primary btn-sm copy-btn" id="copyBtn">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <div class="copy-tooltip" id="copyTooltip">Copied!</div>
+                                            <textarea class="form-control" id="outputText" rows="8" readonly></textarea>
+                                            <span class="char-count" id="outputCount">0 characters</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="text-center mt-4">
+                            <h6 class="text-muted mb-3">Quick Actions</h6>
+                            <button class="btn btn-outline-primary me-2 mb-2" onclick="clearAll()">
+                                <i class="bi bi-trash me-2"></i>Clear All
+                            </button>
+                            <button class="btn btn-outline-primary me-2 mb-2" onclick="swapTexts()">
+                                <i class="bi bi-arrow-left-right me-2"></i>Swap Input/Output
+                            </button>
+                            <button class="btn btn-outline-primary mb-2" onclick="insertSampleText()">
+                                <i class="bi bi-lightbulb me-2"></i>Sample Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Information Cards -->
+                <div class="row g-4 mt-2">
+                    <!-- What is Base64 -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h2 class="h5 mb-3">What is Base64?</h2>
+                                <p class="mb-0">
+                                    Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format.
+                                    It's commonly used when there's a need to encode binary data that needs to be stored and transferred 
+                                    over media that are designed to deal with text.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Uses -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h2 class="h5 mb-3">Common Uses</h2>
+                                <ul class="mb-0">
+                                    <li>Encoding binary data in emails (MIME)</li>
+                                    <li>Embedding image data in CSS or HTML</li>
+                                    <li>Storing complex data in JSON</li>
+                                    <li>URL-safe data encoding</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <small class="text-muted">&copy; 2025 Tools Hub. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyTooltip = document.getElementById('copyTooltip');
+            const inputCount = document.getElementById('inputCount');
+            const outputCount = document.getElementById('outputCount');
+
+            // Update character counts
+            function updateCharCount(text, element) {
+                element.textContent = `${text.length} characters`;
+            }
+
+            inputText.addEventListener('input', () => {
+                updateCharCount(inputText.value, inputCount);
+            });
+
+            // Copy functionality
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(outputText.value);
+                    copyTooltip.classList.add('show');
+                    setTimeout(() => {
+                        copyTooltip.classList.remove('show');
+                    }, 2000);
+                } catch (err) {
+                    alert('Failed to copy text. Please try again.');
+                }
+            });
+
+            // Initialize character counts
+            updateCharCount('', inputCount);
+            updateCharCount('', outputCount);
+        });
+
+        // Encode text to Base64
+        function encode() {
+            const input = document.getElementById('inputText').value;
+            try {
+                const encoded = btoa(unescape(encodeURIComponent(input)));
+                document.getElementById('outputText').value = encoded;
+                updateOutputCount();
+            } catch (e) {
+                alert('Error encoding text. Please check your input.');
+            }
+        }
+
+        // Decode Base64 to text
+        function decode() {
+            const input = document.getElementById('inputText').value;
+            try {
+                const decoded = decodeURIComponent(escape(atob(input)));
+                document.getElementById('outputText').value = decoded;
+                updateOutputCount();
+            } catch (e) {
+                alert('Error decoding Base64. Please check your input.');
+            }
+        }
+
+        // Clear all text
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            document.getElementById('inputCount').textContent = '0 characters';
+            document.getElementById('outputCount').textContent = '0 characters';
+        }
+
+        // Swap input and output texts
+        function swapTexts() {
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const temp = inputText.value;
+            inputText.value = outputText.value;
+            outputText.value = temp;
+            updateCharCounts();
+        }
+
+        // Insert sample text
+        function insertSampleText() {
+            document.getElementById('inputText').value = 'Hello, World!';
+            updateCharCounts();
+            encode();
+        }
+
+        // Update character counts
+        function updateCharCounts() {
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            document.getElementById('inputCount').textContent = `${inputText.value.length} characters`;
+            document.getElementById('outputCount').textContent = `${outputText.value.length} characters`;
+        }
+
+        function updateOutputCount() {
+            const outputText = document.getElementById('outputText');
+            document.getElementById('outputCount').textContent = `${outputText.value.length} characters`;
+        }
+    </script>
+</body>
+</html>

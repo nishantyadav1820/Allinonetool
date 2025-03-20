@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to PDF Converter - Multi-Tools</title>
+    <meta name="description" content="Convert images to PDF format. Combine multiple images into a single PDF file.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .image-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        .preview-card {
+            position: relative;
+        }
+        .preview-card .remove-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .preview-card .remove-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+        .drag-handle {
+            cursor: move;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Multi-Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Image to PDF Converter</h1>
+                        
+                        <!-- File Upload Area -->
+                        <div class="drop-zone mb-4" id="dropZone">
+                            <input type="file" id="fileInput" class="d-none" accept="image/*" multiple>
+                            <div class="upload-prompt">
+                                <i class="bi bi-cloud-arrow-up display-4 text-primary mb-3"></i>
+                                <h5>Drop your images here or click to upload</h5>
+                                <p class="text-muted mb-0">Upload multiple images to combine them into a PDF</p>
+                            </div>
+                        </div>
+
+                        <!-- Image Previews -->
+                        <div id="previewContainer" class="mb-4 d-none">
+                            <h5 class="mb-3">Selected Images</h5>
+                            <p class="text-muted small">Drag images to reorder them in the PDF</p>
+                            <div class="row g-3" id="imageList">
+                                <!-- Image previews will be added here -->
+                            </div>
+                        </div>
+
+                        <!-- PDF Settings -->
+                        <div id="settingsContainer" class="mb-4 d-none">
+                            <h5 class="mb-3">PDF Settings</h5>
+                            
+                            <!-- Page Size -->
+                            <div class="mb-3">
+                                <label class="form-label">Page Size</label>
+                                <select class="form-select" id="pageSize">
+                                    <option value="a4">A4 (210 × 297 mm)</option>
+                                    <option value="letter">Letter (216 × 279 mm)</option>
+                                    <option value="legal">Legal (216 × 356 mm)</option>
+                                </select>
+                            </div>
+
+                            <!-- Page Orientation -->
+                            <div class="mb-3">
+                                <label class="form-label">Orientation</label>
+                                <div class="btn-group w-100">
+                                    <input type="radio" class="btn-check" name="orientation" id="portrait" value="portrait" checked>
+                                    <label class="btn btn-outline-primary" for="portrait">
+                                        <i class="bi bi-file-text me-2"></i>Portrait
+                                    </label>
+                                    <input type="radio" class="btn-check" name="orientation" id="landscape" value="landscape">
+                                    <label class="btn btn-outline-primary" for="landscape">
+                                        <i class="bi bi-file-text-fill me-2"></i>Landscape
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Image Quality -->
+                            <div class="mb-3">
+                                <label class="form-label">Image Quality: <span id="qualityValue">80</span>%</label>
+                                <input type="range" class="form-range" id="qualityRange" min="1" max="100" value="80">
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="text-center">
+                            <button class="btn btn-primary btn-lg px-4 d-none" id="convertBtn">
+                                <i class="bi bi-file-pdf me-2"></i>Create PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips Section -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5><i class="bi bi-lightbulb text-warning me-2"></i>Tips</h5>
+                        <ul class="mb-0">
+                            <li>You can upload multiple images at once</li>
+                            <li>Drag and drop images to reorder them</li>
+                            <li>Choose the right page size and orientation for best results</li>
+                            <li>Adjust quality to balance between file size and image clarity</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const settingsContainer = document.getElementById('settingsContainer');
+        const imageList = document.getElementById('imageList');
+        const qualityRange = document.getElementById('qualityRange');
+        const qualityValue = document.getElementById('qualityValue');
+        const convertBtn = document.getElementById('convertBtn');
+
+        let images = [];
+
+        // Make image list sortable
+        new Sortable(imageList, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'bg-light'
+        });
+
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload only image files');
+                    return;
+                }
+                addImagePreview(file);
+            });
+
+            if (images.length > 0) {
+                showControls();
+            }
+        }
+
+        function addImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const index = images.length;
+                images.push({
+                    file: file,
+                    dataUrl: e.target.result
+                });
+
+                const col = document.createElement('div');
+                col.className = 'col-md-4 col-sm-6';
+                col.innerHTML = `
+                    <div class="card preview-card">
+                        <div class="card-body text-center">
+                            <div class="drag-handle mb-2">
+                                <i class="bi bi-grip-vertical"></i>
+                            </div>
+                            <img src="${e.target.result}" class="image-preview mb-2" alt="Preview">
+                            <div class="text-muted small">${file.name}</div>
+                            <div class="remove-btn" onclick="removeImage(${index})">
+                                <i class="bi bi-x"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                imageList.appendChild(col);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(index) {
+            images.splice(index, 1);
+            updateImageList();
+            if (images.length === 0) {
+                hideControls();
+            }
+        }
+
+        function updateImageList() {
+            imageList.innerHTML = '';
+            images.forEach((image, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 col-sm-6';
+                col.innerHTML = `
+                    <div class="card preview-card">
+                        <div class="card-body text-center">
+                            <div class="drag-handle mb-2">
+                                <i class="bi bi-grip-vertical"></i>
+                            </div>
+                            <img src="${image.dataUrl}" class="image-preview mb-2" alt="Preview">
+                            <div class="text-muted small">${image.file.name}</div>
+                            <div class="remove-btn" onclick="removeImage(${index})">
+                                <i class="bi bi-x"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                imageList.appendChild(col);
+            });
+        }
+
+        function showControls() {
+            previewContainer.classList.remove('d-none');
+            settingsContainer.classList.remove('d-none');
+            convertBtn.classList.remove('d-none');
+        }
+
+        function hideControls() {
+            previewContainer.classList.add('d-none');
+            settingsContainer.classList.add('d-none');
+            convertBtn.classList.add('d-none');
+        }
+
+        // Handle quality adjustment
+        qualityRange.addEventListener('input', () => {
+            qualityValue.textContent = qualityRange.value;
+        });
+
+        // Convert to PDF
+        convertBtn.addEventListener('click', async () => {
+            if (images.length === 0) return;
+
+            convertBtn.disabled = true;
+            convertBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating PDF...';
+
+            try {
+                const { PDFDocument, PageSizes } = PDFLib;
+                const pdfDoc = await PDFDocument.create();
+
+                // Get page size
+                const pageSize = document.getElementById('pageSize').value.toUpperCase();
+                const isLandscape = document.getElementById('landscape').checked;
+                let [width, height] = PageSizes[pageSize];
+                if (isLandscape) [width, height] = [height, width];
+
+                // Process each image
+                for (const image of images) {
+                    const page = pdfDoc.addPage([width, height]);
+                    const img = await pdfDoc.embedJpg(image.dataUrl);
+                    
+                    // Calculate image dimensions to fit the page
+                    const imgDims = calculateImageDimensions(
+                        img.width,
+                        img.height,
+                        width - 40,
+                        height - 40
+                    );
+
+                    // Center the image on the page
+                    page.drawImage(img, {
+                        x: (width - imgDims.width) / 2,
+                        y: (height - imgDims.height) / 2,
+                        width: imgDims.width,
+                        height: imgDims.height
+                    });
+                }
+
+                // Save the PDF
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'converted-images.pdf';
+                link.click();
+
+            } catch (error) {
+                console.error('PDF creation failed:', error);
+                alert('Failed to create PDF. Please try again.');
+            } finally {
+                convertBtn.disabled = false;
+                convertBtn.innerHTML = '<i class="bi bi-file-pdf me-2"></i>Create PDF';
+            }
+        });
+
+        function calculateImageDimensions(imgWidth, imgHeight, maxWidth, maxHeight) {
+            const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+            return {
+                width: imgWidth * ratio,
+                height: imgHeight * ratio
+            };
+        }
+    </script>
+</body>
+</html>

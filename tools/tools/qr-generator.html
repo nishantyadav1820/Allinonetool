@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Multi-Tools</title>
+    <meta name="description" content="Generate QR codes from text, URLs, and files">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/tools.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Updated QR Code library source -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        .loading {
+            position: relative;
+        }
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(var(--bs-body-bg-rgb), 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #qrCode img {
+            max-width: 100%;
+            height: auto;
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">QR Code Generator</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="textInput" class="form-label">Text or URL</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="textInput" placeholder="Enter text or URL">
+                        <button class="btn btn-outline-secondary" type="button" id="pasteBtn" title="Paste from clipboard">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Or Upload a File (Max 1MB)</label>
+                    <input type="file" class="form-control" id="fileInput" accept=".txt,.json,.csv">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="sizeRange" class="form-label">Size: <span id="sizeValue">200 x 200</span></label>
+                    <input type="range" class="form-range" id="sizeRange" min="100" max="400" value="200">
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="foregroundColor" class="form-label">Foreground Color</label>
+                        <input type="color" class="form-control form-control-color w-100" id="foregroundColor" value="#000000">
+                    </div>
+                    <div class="col">
+                        <label for="backgroundColor" class="form-label">Background Color</label>
+                        <input type="color" class="form-control form-control-color w-100" id="backgroundColor" value="#ffffff">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="errorLevel" class="form-label">Error Correction Level</label>
+                    <select class="form-select" id="errorLevel">
+                        <option value="L">Low (7%)</option>
+                        <option value="M" selected>Medium (15%)</option>
+                        <option value="Q">Quartile (25%)</option>
+                        <option value="H">High (30%)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <button id="generateBtn" class="btn btn-primary me-2" disabled>
+                        <i class="bi bi-qr-code"></i> Generate QR Code
+                    </button>
+                    <button id="downloadBtn" class="btn btn-success me-2" disabled>
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                    <button id="scanBtn" class="btn btn-info">
+                        <i class="bi bi-camera"></i> Scan QR Code
+                    </button>
+                </div>
+
+                <div class="alert alert-danger d-none" id="errorAlert" role="alert"></div>
+            </div>
+            
+            <div class="col-md-6">
+                <div id="qrCode" class="text-center p-3 border rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div class="modal fade" id="scannerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Scan QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reader"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="btn btn-lg btn-outline-primary rounded-circle dark-mode-toggle" id="darkModeToggle">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if QRCode library is loaded
+            if (typeof QRCode === 'undefined') {
+                // Fallback to another CDN if the first one fails
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js';
+                document.head.appendChild(fallbackScript);
+                
+                fallbackScript.onload = function() {
+                    initQRCode();
+                };
+                
+                fallbackScript.onerror = function() {
+                    document.getElementById('errorAlert').textContent = 'Failed to load QR Code library. Please refresh the page.';
+                    document.getElementById('errorAlert').classList.remove('d-none');
+                };
+            } else {
+                initQRCode();
+            }
+
+            function initQRCode() {
+                const textInput = document.getElementById('textInput');
+                const fileInput = document.getElementById('fileInput');
+                const sizeRange = document.getElementById('sizeRange');
+                const sizeValue = document.getElementById('sizeValue');
+                const generateBtn = document.getElementById('generateBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const qrCode = document.getElementById('qrCode');
+                const foregroundColor = document.getElementById('foregroundColor');
+                const backgroundColor = document.getElementById('backgroundColor');
+                const errorLevel = document.getElementById('errorLevel');
+                const scanBtn = document.getElementById('scanBtn');
+                const scannerModal = new bootstrap.Modal(document.getElementById('scannerModal'));
+                const pasteBtn = document.getElementById('pasteBtn');
+                const errorAlert = document.getElementById('errorAlert');
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                
+                let qrInstance = null;
+                let html5QrcodeScanner = null;
+
+                // Dark mode toggle
+                darkModeToggle.addEventListener('click', function() {
+                    const html = document.documentElement;
+                    const isDark = html.getAttribute('data-bs-theme') === 'dark';
+                    html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+                    this.innerHTML = `<i class="bi bi-${isDark ? 'moon-stars' : 'sun'}"></i>`;
+                    localStorage.setItem('darkMode', !isDark);
+                });
+
+                // Initialize dark mode from localStorage
+                if (localStorage.getItem('darkMode') === 'true') {
+                    darkModeToggle.click();
+                }
+
+                // Paste from clipboard
+                pasteBtn.addEventListener('click', async function() {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        textInput.value = text;
+                        textInput.dispatchEvent(new Event('input'));
+                    } catch (err) {
+                        showError('Failed to read from clipboard');
+                    }
+                });
+
+                // File input handler
+                fileInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (!file) return;
+
+                    if (file.size > 1024 * 1024) {
+                        showError('File size must be less than 1MB');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        textInput.value = e.target.result;
+                        textInput.dispatchEvent(new Event('input'));
+                    };
+                    reader.onerror = function() {
+                        showError('Error reading file');
+                    };
+                    reader.readAsText(file);
+                });
+
+                // Enable/disable generate button based on input
+                textInput.addEventListener('input', function() {
+                    generateBtn.disabled = !this.value;
+                    hideError();
+                });
+
+                // Color change handlers
+                foregroundColor.addEventListener('input', function() {
+                    if (qrInstance) {
+                        qrInstance.clear();
+                        qrInstance = null;
+                        downloadBtn.disabled = true;
+                    }
+                });
+
+                backgroundColor.addEventListener('input', function() {
+                    if (qrInstance) {
+                        qrInstance.clear();
+                        qrInstance = null;
+                        downloadBtn.disabled = true;
+                    }
+                });
+
+                // Error level change handler
+                errorLevel.addEventListener('change', function() {
+                    if (qrInstance) {
+                        qrInstance.clear();
+                        qrInstance = null;
+                        downloadBtn.disabled = true;
+                    }
+                });
+
+                // Size change handler
+                sizeRange.addEventListener('input', function() {
+                    sizeValue.textContent = `${this.value} x ${this.value}`;
+                    if (qrInstance) {
+                        qrInstance.clear();
+                        qrInstance = null;
+                        downloadBtn.disabled = true;
+                    }
+                });
+
+                function showError(message) {
+                    errorAlert.textContent = message;
+                    errorAlert.classList.remove('d-none');
+                }
+
+                function hideError() {
+                    errorAlert.classList.add('d-none');
+                }
+
+                // Generate QR code
+                function generateQRCode() {
+                    const size = parseInt(sizeRange.value);
+                    const text = textInput.value;
+
+                    if (!text) return;
+
+                    try {
+                        qrCode.classList.add('loading');
+                        if (qrInstance) {
+                            qrInstance.clear();
+                            qrInstance = null;
+                        }
+                        
+                        // Ensure QRCode is available
+                        if (typeof QRCode === 'undefined') {
+                            throw new Error('QR Code library not loaded');
+                        }
+                        
+                        qrInstance = new QRCode(qrCode, {
+                            text: text,
+                            width: size,
+                            height: size,
+                            colorDark: foregroundColor.value,
+                            colorLight: backgroundColor.value,
+                            correctLevel: QRCode.CorrectLevel[errorLevel.value]
+                        });
+
+                        downloadBtn.disabled = false;
+                        hideError();
+                    } catch (err) {
+                        showError('Failed to generate QR code: ' + err.message);
+                        console.error('QR Code generation error:', err);
+                    } finally {
+                        qrCode.classList.remove('loading');
+                    }
+                }
+
+                // Generate QR code button click
+                generateBtn.addEventListener('click', generateQRCode);
+
+                // Download QR code
+                downloadBtn.addEventListener('click', function() {
+                    try {
+                        const canvas = qrCode.querySelector('canvas');
+                        if (!canvas) {
+                            throw new Error('QR code not generated yet');
+                        }
+                        const image = canvas.toDataURL('image/png');
+                        const filename = textInput.value.substring(0, 30).replace(/[^a-z0-9]/gi, '_');
+                        const link = document.createElement('a');
+                        link.download = `qr_${filename}.png`;
+                        link.href = image;
+                        link.click();
+                    } catch (err) {
+                        showError('Failed to download QR code: ' + err.message);
+                    }
+                });
+
+                // Scanner setup
+                scanBtn.addEventListener('click', function() {
+                    scannerModal.show();
+                    if (!html5QrcodeScanner) {
+                        html5QrcodeScanner = new Html5QrcodeScanner(
+                            "reader",
+                            { fps: 10, qrbox: {width: 250, height: 250} },
+                            false
+                        );
+                        html5QrcodeScanner.render((text) => {
+                            textInput.value = text;
+                            generateQRCode();
+                            scannerModal.hide();
+                            html5QrcodeScanner.clear();
+                        }, (err) => {
+                            console.error(err);
+                        });
+                    }
+                });
+
+                // Clean up scanner when modal is closed
+                document.getElementById('scannerModal').addEventListener('hidden.bs.modal', function () {
+                    if (html5QrcodeScanner) {
+                        html5QrcodeScanner.clear();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

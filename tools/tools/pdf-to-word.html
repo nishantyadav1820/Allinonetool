@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Converter - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Mammoth.js for DOCX handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- SheetJS for Excel conversion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        .drop-zone {
+            border: 2px dashed #0d6efd;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: var(--bs-body-bg);
+        }
+        .drop-zone.dragover {
+            background: var(--bs-secondary-bg);
+            border-color: #0a58ca;
+        }
+        .preview-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin: 1rem 0;
+            display: none;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .file-info {
+            background: var(--bs-secondary-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        .progress-container {
+            display: none;
+        }
+        #previewCanvas {
+            max-width: 100%;
+            margin: 0 auto;
+            display: block;
+        }
+        .page-navigation {
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+        .format-option {
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .format-option:hover {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+        .format-option.selected {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .conversion-options {
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">PDF Converter</h1>
+                        
+                        <div class="tool-section">
+                            <div class="drop-zone" id="dropZone">
+                                <i class="bi bi-file-pdf display-4 text-primary mb-3"></i>
+                                <h5>Drag & Drop your PDF file here</h5>
+                                <p class="text-muted">or</p>
+                                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                    Choose File
+                                </button>
+                                <input type="file" id="fileInput" hidden accept=".pdf">
+                                <p class="text-muted mt-2">Maximum file size: 50MB</p>
+                            </div>
+
+                            <!-- Output Format Selection -->
+                            <div class="conversion-options" id="conversionOptions">
+                                <h5 class="mb-3">Select Output Format</h5>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-3 col-sm-6">
+                                        <div class="format-option text-center" data-format="docx">
+                                            <i class="bi bi-file-word format-icon text-primary"></i>
+                                            <h6>Word (DOCX)</h6>
+                                            <small class="text-muted">Best for text documents</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <div class="format-option text-center" data-format="xlsx">
+                                            <i class="bi bi-file-excel format-icon text-success"></i>
+                                            <h6>Excel (XLSX)</h6>
+                                            <small class="text-muted">Best for tables</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <div class="format-option text-center" data-format="txt">
+                                            <i class="bi bi-file-text format-icon text-secondary"></i>
+                                            <h6>Text (TXT)</h6>
+                                            <small class="text-muted">Plain text only</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-6">
+                                        <div class="format-option text-center" data-format="html">
+                                            <i class="bi bi-file-code format-icon text-danger"></i>
+                                            <h6>Web Page (HTML)</h6>
+                                            <small class="text-muted">With formatting</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Conversion Settings -->
+                                <div class="mt-4">
+                                    <h6>Conversion Settings</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="maintainLayout" checked>
+                                                <label class="form-check-label" for="maintainLayout">
+                                                    Maintain Original Layout
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="extractImages" checked>
+                                                <label class="form-check-label" for="extractImages">
+                                                    Extract Images
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="ocrEnabled">
+                                                <label class="form-check-label" for="ocrEnabled">
+                                                    Enable OCR (for scanned documents)
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="compressOutput">
+                                                <label class="form-check-label" for="compressOutput">
+                                                    Compress Output File
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Info -->
+                            <div class="file-info" id="fileInfo">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p class="mb-1"><strong>File Name:</strong> <span id="fileName">-</span></p>
+                                        <p class="mb-0"><strong>File Size:</strong> <span id="fileSize">-</span></p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p class="mb-1"><strong>Pages:</strong> <span id="pageCount">-</span></p>
+                                        <p class="mb-0"><strong>Format:</strong> <span id="fileFormat">PDF</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress-container" id="progressContainer">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 0%" id="progressBar"></div>
+                                </div>
+                                <p class="text-center mt-2 mb-0" id="progressText">Processing...</p>
+                            </div>
+
+                            <!-- Preview Container -->
+                            <div class="preview-container" id="previewContainer">
+                                <div class="page-navigation" id="pageNavigation">
+                                    <button class="btn btn-sm btn-outline-primary me-2" id="prevPage">
+                                        <i class="bi bi-chevron-left"></i> Previous
+                                    </button>
+                                    <span id="pageIndicator">Page 1 of 1</span>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" id="nextPage">
+                                        Next <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <canvas id="previewCanvas"></canvas>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="text-center mt-3">
+                                <button class="btn btn-primary" id="convertBtn" disabled>
+                                    <i class="bi bi-arrow-repeat me-2"></i>Convert
+                                </button>
+                                <button class="btn btn-success" id="downloadBtn" disabled>
+                                    <i class="bi bi-download me-2"></i>Download
+                                </button>
+                                <button class="btn btn-outline-secondary" id="resetBtn">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Upload your PDF file by dragging it or clicking "Choose File"</li>
+                            <li>Select your desired output format (Word, Excel, Text, or HTML)</li>
+                            <li>Adjust conversion settings if needed</li>
+                            <li>Preview the PDF content</li>
+                            <li>Click "Convert" to start conversion</li>
+                            <li>Download your converted file</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Multiple output formats (Word, Excel, Text, HTML)</li>
+                            <li>OCR support for scanned documents</li>
+                            <li>Maintain original formatting and layout</li>
+                            <li>Extract and preserve images</li>
+                            <li>Table detection and conversion</li>
+                            <li>Fast processing speed</li>
+                            <li>Preview before converting</li>
+                            <li>Privacy-focused - files processed locally</li>
+                            <li>Support for large files (up to 50MB)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-check-circle-fill text-success display-1 mb-4 animate__animated animate__bounceIn"></i>
+                    <h4 class="mb-3 animate__animated animate__fadeInUp animate__delay-1s">Conversion Successful!</h4>
+                    <p class="mb-4 animate__animated animate__fadeInUp animate__delay-1s">Your file has been converted successfully.</p>
+                    <button type="button" class="btn btn-success btn-lg animate__animated animate__fadeInUp animate__delay-2s" id="modalDownloadBtn">
+                        <i class="bi bi-download me-2"></i>Download Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="btn btn-lg btn-outline-primary rounded-circle dark-mode-toggle" id="darkModeToggle">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const pageCount = document.getElementById('pageCount');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewCanvas = document.getElementById('previewCanvas');
+            const pageNavigation = document.getElementById('pageNavigation');
+            const pageIndicator = document.getElementById('pageIndicator');
+            const prevPage = document.getElementById('prevPage');
+            const nextPage = document.getElementById('nextPage');
+            const convertBtn = document.getElementById('convertBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const conversionOptions = document.getElementById('conversionOptions');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+
+            let currentPdfFile = null;
+            let pdfDoc = null;
+            let currentPage = 1;
+            let selectedFormat = null;
+            let convertedFile = null;
+
+            // Dark mode toggle
+            darkModeToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-bs-theme') === 'dark';
+                html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+                this.innerHTML = `<i class="bi bi-${isDark ? 'moon-stars' : 'sun'}"></i>`;
+                localStorage.setItem('darkMode', !isDark);
+            });
+
+            // Initialize dark mode from localStorage
+            if (localStorage.getItem('darkMode') === 'true') {
+                darkModeToggle.click();
+            }
+
+            // Format selection
+            document.querySelectorAll('.format-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedFormat = option.dataset.format;
+                    convertBtn.disabled = false;
+                });
+            });
+
+            // Drag and drop handlers
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === 'application/pdf') {
+                    handlePdfFile(file);
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files[0]) {
+                    handlePdfFile(fileInput.files[0]);
+                }
+            });
+
+            async function handlePdfFile(file) {
+                if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                    alert('File size exceeds 50MB limit');
+                    return;
+                }
+
+                currentPdfFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+                conversionOptions.style.display = 'block';
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    pageCount.textContent = pdfDoc.numPages;
+                    currentPage = 1;
+                    
+                    if (pdfDoc.numPages > 1) {
+                        pageNavigation.style.display = 'block';
+                    }
+                    
+                    await renderPage(currentPage);
+                    previewContainer.style.display = 'block';
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    alert('Error loading PDF file');
+                }
+            }
+
+            async function renderPage(pageNum) {
+                try {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    
+                    const canvas = document.getElementById('previewCanvas');
+                    const context = canvas.getContext('2d');
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    pageIndicator.textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+                } catch (error) {
+                    console.error('Error rendering page:', error);
+                }
+            }
+
+            // Page navigation
+            prevPage.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPage(currentPage);
+                }
+            });
+
+            nextPage.addEventListener('click', () => {
+                if (currentPage < pdfDoc.numPages) {
+                    currentPage++;
+                    renderPage(currentPage);
+                }
+            });
+
+            async function convertToWord() {
+                if (!currentPdfFile || !selectedFormat) return;
+
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Starting conversion...';
+                convertBtn.disabled = true;
+
+                try {
+                    const arrayBuffer = await currentPdfFile.arrayBuffer();
+                    const text = await extractTextFromPdf(arrayBuffer);
+                    
+                    switch (selectedFormat) {
+                        case 'docx':
+                            convertedFile = await convertToDocx(text);
+                            break;
+                        case 'xlsx':
+                            convertedFile = await convertToExcel(text);
+                            break;
+                        case 'txt':
+                            convertedFile = new Blob([text], { type: 'text/plain' });
+                            break;
+                        case 'html':
+                            convertedFile = await convertToHtml(text);
+                            break;
+                    }
+
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Conversion complete!';
+                    downloadBtn.disabled = false;
+                    
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                    
+                    // Highlight download button with animation
+                    downloadBtn.classList.add('btn-lg');
+                    downloadBtn.classList.add('animate__animated', 'animate__pulse');
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    progressText.textContent = 'Error during conversion';
+                    alert('Error converting file');
+                }
+            }
+
+            async function extractTextFromPdf(arrayBuffer) {
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                let text = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const pageText = content.items.map(item => item.str).join(' ');
+                    text += pageText + '\n\n';
+                    
+                    progressBar.style.width = `${(i / pdf.numPages * 100)}%`;
+                    progressText.textContent = `Extracting text from page ${i}...`;
+                }
+                
+                return text;
+            }
+
+            async function convertToDocx(text) {
+                // Create a simple DOCX structure
+                const docx = {
+                    content: [{
+                        type: 'paragraph',
+                        children: [{ text: text }]
+                    }]
+                };
+                
+                // Convert to Blob
+                const blob = new Blob([JSON.stringify(docx)], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                return blob;
+            }
+
+            async function convertToExcel(text) {
+                // Create a simple Excel workbook
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([['Converted Text'], [text]]);
+                XLSX.utils.book_append_sheet(wb, ws, 'Converted PDF');
+                
+                // Convert to Blob
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            }
+
+            async function convertToHtml(text) {
+                const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Converted PDF</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        ${text.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    </body>
+                    </html>
+                `;
+                return new Blob([html], { type: 'text/html' });
+            }
+
+            function downloadFile() {
+                if (!convertedFile) return;
+                
+                const extension = selectedFormat;
+                const downloadName = `${fileName.textContent.replace('.pdf', '')}.${extension}`;
+                const url = URL.createObjectURL(convertedFile);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = downloadName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            // Add modal download button handler
+            document.getElementById('modalDownloadBtn').addEventListener('click', () => {
+                downloadFile();
+                bootstrap.Modal.getInstance(document.getElementById('successModal')).hide();
+            });
+
+            function resetTool() {
+                currentPdfFile = null;
+                pdfDoc = null;
+                convertedFile = null;
+                selectedFormat = null;
+                currentPage = 1;
+                
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                progressContainer.style.display = 'none';
+                previewContainer.style.display = 'none';
+                pageNavigation.style.display = 'none';
+                conversionOptions.style.display = 'none';
+                convertBtn.disabled = true;
+                downloadBtn.disabled = true;
+                
+                document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // Event handlers
+            convertBtn.addEventListener('click', convertToWord);
+            downloadBtn.addEventListener('click', downloadFile);
+            resetBtn.addEventListener('click', resetTool);
+        });
+    </script>
+</body>
+</html>

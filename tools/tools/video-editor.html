@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Editor - Multi-Tools</title>
+    <meta name="description" content="Edit videos online. Trim, crop, add filters, and more. Free online video editor.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .video-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .video-preview {
+            width: 100%;
+            border-radius: 0.5rem;
+            background: #000;
+        }
+        .timeline {
+            position: relative;
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .timeline-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(13, 110, 253, 0.1);
+            pointer-events: none;
+        }
+        .timeline-handle {
+            position: absolute;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: #0d6efd;
+            cursor: ew-resize;
+        }
+        .timeline-start {
+            left: 0;
+        }
+        .timeline-end {
+            right: 0;
+        }
+        .tools-sidebar {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .tool-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+        .tool-btn i {
+            width: 1.5rem;
+            text-align: center;
+        }
+        .time-display {
+            font-family: monospace;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Multi-Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <!-- Upload Section -->
+        <div id="uploadSection">
+            <div class="drop-zone mb-4" id="dropZone">
+                <input type="file" id="fileInput" class="d-none" accept="video/*">
+                <div class="upload-prompt">
+                    <i class="bi bi-camera-reels display-4 text-primary mb-3"></i>
+                    <h5>Drop your video here or click to upload</h5>
+                    <p class="text-muted mb-0">Supports MP4, WebM, OGG (max 500MB)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Section -->
+        <div id="editorSection" class="d-none">
+            <div class="row">
+                <!-- Tools Sidebar -->
+                <div class="col-md-3">
+                    <div class="tools-sidebar">
+                        <h5 class="mb-3">Tools</h5>
+                        
+                        <!-- Basic Operations -->
+                        <button class="btn btn-outline-primary tool-btn" id="trimBtn">
+                            <i class="bi bi-scissors"></i> Trim
+                        </button>
+                        <button class="btn btn-outline-primary tool-btn" id="cropBtn">
+                            <i class="bi bi-crop"></i> Crop
+                        </button>
+                        <button class="btn btn-outline-primary tool-btn" id="rotateBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Rotate
+                        </button>
+                        
+                        <!-- Adjustments -->
+                        <h6 class="mt-4 mb-3">Adjustments</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Brightness</label>
+                            <input type="range" class="form-range" id="brightness" min="-100" max="100" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contrast</label>
+                            <input type="range" class="form-range" id="contrast" min="-100" max="100" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Saturation</label>
+                            <input type="range" class="form-range" id="saturation" min="-100" max="100" value="0">
+                        </div>
+                        
+                        <!-- Speed -->
+                        <h6 class="mt-4 mb-3">Playback Speed</h6>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="speed" id="speed0.5" value="0.5">
+                            <label class="btn btn-outline-primary" for="speed0.5">0.5x</label>
+                            
+                            <input type="radio" class="btn-check" name="speed" id="speed1" value="1" checked>
+                            <label class="btn btn-outline-primary" for="speed1">1x</label>
+                            
+                            <input type="radio" class="btn-check" name="speed" id="speed2" value="2">
+                            <label class="btn btn-outline-primary" for="speed2">2x</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Editor Area -->
+                <div class="col-md-9">
+                    <div class="video-container">
+                        <!-- Video Preview -->
+                        <video id="videoPreview" class="video-preview" controls>
+                            Your browser does not support the video tag.
+                        </video>
+
+                        <!-- Timeline -->
+                        <div class="timeline" id="timeline">
+                            <div class="timeline-progress"></div>
+                            <div class="timeline-handle timeline-start"></div>
+                            <div class="timeline-handle timeline-end"></div>
+                        </div>
+
+                        <!-- Time Display -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="time-display" id="startTime">00:00</span>
+                            <span class="time-display" id="endTime">00:00</span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-outline-secondary" id="resetBtn">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                            </button>
+                            <div>
+                                <button class="btn btn-primary me-2" id="previewBtn">
+                                    <i class="bi bi-play-circle me-2"></i>Preview
+                                </button>
+                                <button class="btn btn-success" id="exportBtn">
+                                    <i class="bi bi-download me-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const editorSection = document.getElementById('editorSection');
+        const videoPreview = document.getElementById('videoPreview');
+        const timeline = document.getElementById('timeline');
+        const timelineProgress = timeline.querySelector('.timeline-progress');
+        const startHandle = timeline.querySelector('.timeline-start');
+        const endHandle = timeline.querySelector('.timeline-end');
+        const startTime = document.getElementById('startTime');
+        const endTime = document.getElementById('endTime');
+
+        let videoFile = null;
+        let trimStart = 0;
+        let trimEnd = 0;
+        let isDragging = false;
+        let activeHandle = null;
+
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.type.startsWith('video/')) {
+                alert('Please upload a video file');
+                return;
+            }
+
+            if (file.size > 500 * 1024 * 1024) { // 500MB
+                alert('Please upload a video smaller than 500MB');
+                return;
+            }
+
+            videoFile = file;
+            videoPreview.src = URL.createObjectURL(file);
+            uploadSection.classList.add('d-none');
+            editorSection.classList.remove('d-none');
+
+            // Initialize video
+            videoPreview.onloadedmetadata = () => {
+                trimEnd = videoPreview.duration;
+                updateTimeDisplay();
+            };
+
+            // Initialize timeline
+            initializeTimeline();
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimeDisplay() {
+            startTime.textContent = formatTime(trimStart);
+            endTime.textContent = formatTime(trimEnd);
+        }
+
+        function initializeTimeline() {
+            // Handle timeline clicks
+            timeline.addEventListener('mousedown', e => {
+                const rect = timeline.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const percent = x / rect.width;
+                
+                // Determine which handle is closer
+                const startPercent = trimStart / videoPreview.duration;
+                const endPercent = trimEnd / videoPreview.duration;
+                
+                if (Math.abs(percent - startPercent) < Math.abs(percent - endPercent)) {
+                    activeHandle = startHandle;
+                } else {
+                    activeHandle = endHandle;
+                }
+                
+                isDragging = true;
+                updateHandlePosition(e);
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (isDragging) {
+                    updateHandlePosition(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                activeHandle = null;
+            });
+        }
+
+        function updateHandlePosition(e) {
+            const rect = timeline.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            const percent = x / rect.width;
+            const time = percent * videoPreview.duration;
+
+            if (activeHandle === startHandle) {
+                trimStart = Math.min(time, trimEnd - 1);
+                startHandle.style.left = (trimStart / videoPreview.duration * 100) + '%';
+            } else if (activeHandle === endHandle) {
+                trimEnd = Math.max(time, trimStart + 1);
+                endHandle.style.right = ((videoPreview.duration - trimEnd) / videoPreview.duration * 100) + '%';
+            }
+
+            updateTimeDisplay();
+            videoPreview.currentTime = trimStart;
+        }
+
+        // Handle video preview
+        videoPreview.addEventListener('timeupdate', () => {
+            const progress = (videoPreview.currentTime - trimStart) / (trimEnd - trimStart);
+            timelineProgress.style.width = (progress * 100) + '%';
+        });
+
+        // Handle adjustments
+        const adjustments = ['brightness', 'contrast', 'saturation'];
+        adjustments.forEach(adjustment => {
+            const slider = document.getElementById(adjustment);
+            slider.addEventListener('input', updateVideo);
+        });
+
+        function updateVideo() {
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+
+            videoPreview.style.filter = `
+                brightness(${1 + brightness/100})
+                contrast(${1 + contrast/100})
+                saturate(${1 + saturation/100})
+            `;
+        }
+
+        // Handle speed change
+        document.querySelectorAll('input[name="speed"]').forEach(radio => {
+            radio.addEventListener('change', e => {
+                videoPreview.playbackRate = parseFloat(e.target.value);
+            });
+        });
+
+        // Handle rotation
+        let rotation = 0;
+        document.getElementById('rotateBtn').addEventListener('click', () => {
+            rotation = (rotation + 90) % 360;
+            videoPreview.style.transform = `rotate(${rotation}deg)`;
+        });
+
+        // Handle reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Reset adjustments
+            adjustments.forEach(adjustment => {
+                document.getElementById(adjustment).value = 0;
+            });
+            videoPreview.style.filter = 'none';
+            
+            // Reset trim
+            trimStart = 0;
+            trimEnd = videoPreview.duration;
+            startHandle.style.left = '0%';
+            endHandle.style.right = '0%';
+            updateTimeDisplay();
+            
+            // Reset rotation
+            rotation = 0;
+            videoPreview.style.transform = 'none';
+            
+            // Reset speed
+            document.getElementById('speed1').checked = true;
+            videoPreview.playbackRate = 1;
+        });
+
+        // Handle preview
+        document.getElementById('previewBtn').addEventListener('click', () => {
+            videoPreview.currentTime = trimStart;
+            videoPreview.play();
+            
+            const checkTime = () => {
+                if (videoPreview.currentTime >= trimEnd) {
+                    videoPreview.pause();
+                    videoPreview.currentTime = trimStart;
+                } else if (!videoPreview.paused) {
+                    requestAnimationFrame(checkTime);
+                }
+            };
+            
+            checkTime();
+        });
+
+        // Handle export
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            const exportBtn = document.getElementById('exportBtn');
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            try {
+                // Create a canvas to apply filters
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = videoPreview.videoWidth;
+                canvas.height = videoPreview.videoHeight;
+
+                // Draw the current frame with filters
+                ctx.filter = videoPreview.style.filter;
+                if (rotation) {
+                    ctx.translate(canvas.width/2, canvas.height/2);
+                    ctx.rotate(rotation * Math.PI / 180);
+                    ctx.translate(-canvas.width/2, -canvas.height/2);
+                }
+                ctx.drawImage(videoPreview, 0, 0);
+
+                // Create a blob from the canvas
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'edited-frame.png';
+                link.click();
+
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Failed to export video. Please try again.');
+            } finally {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<i class="bi bi-download me-2"></i>Export';
+            }
+        });
+    </script>
+</body>
+</html>

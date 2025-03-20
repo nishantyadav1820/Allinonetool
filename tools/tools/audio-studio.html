@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Studio - Multi-Tools</title>
+    <meta name="description" content="Online audio studio with waveform visualization, multi-track support, audio effects and format conversion.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .track-container {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .waveform-container {
+            width: 100%;
+            height: 128px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin: 1rem 0;
+        }
+        .track-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .volume-slider {
+            width: 100px;
+        }
+        .effects-panel {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .effect-control {
+            margin-bottom: 1rem;
+        }
+        .transport-controls {
+            position: sticky;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        .master-volume {
+            width: 150px;
+            margin: 0 1rem;
+        }
+        .format-controls {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+        }
+        .format-controls select {
+            width: auto;
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .track-controls {
+                flex-wrap: wrap;
+            }
+            .volume-slider {
+                width: 100%;
+            }
+            .master-volume {
+                width: 100%;
+                margin: 1rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Multi-Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Audio Studio</h1>
+                        
+                        <!-- Track List -->
+                        <div id="trackList">
+                            <!-- Tracks will be added here dynamically -->
+                        </div>
+
+                        <!-- Add Track Button -->
+                        <button class="btn btn-primary mb-4" id="addTrackBtn">
+                            <i class="bi bi-plus-lg me-2"></i>Add Track
+                        </button>
+
+                        <!-- Format Controls -->
+                        <div class="format-controls">
+                            <h5 class="mb-3">Export Settings</h5>
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <label class="form-label">Format:</label>
+                                    <select class="form-select" id="formatSelect">
+                                        <option value="mp3">MP3</option>
+                                        <option value="wav">WAV</option>
+                                        <option value="ogg">OGG</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Quality:</label>
+                                    <select class="form-select" id="qualitySelect">
+                                        <option value="128">128 kbps</option>
+                                        <option value="192">192 kbps</option>
+                                        <option value="320">320 kbps</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-success" id="exportBtn">
+                                        <i class="bi bi-download me-2"></i>Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Master Effects Panel -->
+                        <div class="effects-panel">
+                            <h5 class="mb-3">Master Effects</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="effect-control">
+                                        <label class="form-label">Master Volume</label>
+                                        <input type="range" class="form-range master-volume" id="masterVolume" min="0" max="1" step="0.01" value="1">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="effect-control">
+                                        <label class="form-label">Reverb</label>
+                                        <input type="range" class="form-range" id="reverbLevel" min="0" max="1" step="0.01" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="effect-control">
+                                        <label class="form-label">EQ High</label>
+                                        <input type="range" class="form-range" id="eqHigh" min="-12" max="12" step="1" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="effect-control">
+                                        <label class="form-label">EQ Low</label>
+                                        <input type="range" class="form-range" id="eqLow" min="-12" max="12" step="1" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transport Controls -->
+                        <div class="transport-controls text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary" id="rewindBtn">
+                                    <i class="bi bi-skip-backward-fill"></i>
+                                </button>
+                                <button class="btn btn-primary" id="playBtn">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" id="stopBtn">
+                                    <i class="bi bi-stop-fill"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <span id="currentTime">00:00</span> / <span id="duration">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions Card -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Click "Add Track" to create a new audio track</li>
+                            <li>Upload audio files to each track</li>
+                            <li>Adjust individual track volume and effects</li>
+                            <li>Use master effects to enhance the overall mix</li>
+                            <li>Use transport controls to play, stop, and navigate</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Card -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Multi-track audio support</li>
+                            <li>Waveform visualization</li>
+                            <li>Real-time audio effects (Reverb, EQ)</li>
+                            <li>Individual track controls</li>
+                            <li>Master effects processing</li>
+                            <li>Mobile-responsive interface</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/7.0.0/wavesurfer.min.js"></script>
+    <script>
+        class AudioTrack {
+            constructor(container) {
+                this.container = container;
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.setupNodes();
+                this.createUI();
+                this.setupWaveform();
+            }
+
+            setupNodes() {
+                this.gainNode = this.audioContext.createGain();
+                this.reverbNode = this.audioContext.createConvolver();
+                this.highEQ = this.audioContext.createBiquadFilter();
+                this.lowEQ = this.audioContext.createBiquadFilter();
+                this.masterGainNode = this.audioContext.createGain();
+
+                this.highEQ.type = 'highshelf';
+                this.highEQ.frequency.value = 4000;
+                this.lowEQ.type = 'lowshelf';
+                this.lowEQ.frequency.value = 400;
+
+                this.gainNode.connect(this.highEQ);
+                this.highEQ.connect(this.lowEQ);
+                this.lowEQ.connect(this.masterGainNode);
+                this.masterGainNode.connect(this.audioContext.destination);
+            }
+
+            createUI() {
+                const trackDiv = document.createElement('div');
+                trackDiv.className = 'track-container';
+                trackDiv.innerHTML = `
+                    <div class="track-controls">
+                        <input type="file" class="form-control" accept="audio/*">
+                        <input type="range" class="form-range volume-slider" min="0" max="1" step="0.01" value="1">
+                        <button class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="waveform-container"></div>
+                `;
+
+                this.container.appendChild(trackDiv);
+                this.trackElement = trackDiv;
+
+                // Setup event listeners
+                const fileInput = trackDiv.querySelector('input[type="file"]');
+                const volumeSlider = trackDiv.querySelector('.volume-slider');
+                const deleteBtn = trackDiv.querySelector('.btn-danger');
+
+                fileInput.addEventListener('change', (e) => this.loadAudio(e.target.files[0]));
+                volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+                deleteBtn.addEventListener('click', () => this.delete());
+            }
+
+            setupWaveform() {
+                this.wavesurfer = WaveSurfer.create({
+                    container: this.trackElement.querySelector('.waveform-container'),
+                    waveColor: '#4a90e2',
+                    progressColor: '#2c5282',
+                    height: 128,
+                    responsive: true,
+                    normalize: true
+                });
+            }
+
+            loadAudio(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.wavesurfer.load(e.target.result);
+                    this.audioContext.decodeAudioData(e.target.result, (buffer) => {
+                        this.audioBuffer = buffer;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+
+            setVolume(value) {
+                this.gainNode.gain.value = value;
+            }
+
+            delete() {
+                this.trackElement.remove();
+                this.wavesurfer.destroy();
+            }
+
+            play() {
+                if (this.audioBuffer) {
+                    const source = this.audioContext.createBufferSource();
+                    source.buffer = this.audioBuffer;
+                    source.connect(this.gainNode);
+                    source.start();
+                    this.wavesurfer.play();
+                }
+            }
+
+            stop() {
+                this.wavesurfer.stop();
+            }
+        }
+
+        class AudioStudio {
+            constructor() {
+                this.tracks = [];
+                this.masterGainNode = null;
+                this.setupUI();
+                this.setupMasterEffects();
+            }
+
+            setupMasterEffects() {
+                this.masterVolume = document.getElementById('masterVolume');
+                this.masterVolume.addEventListener('input', (e) => this.setMasterVolume(e.target.value));
+
+                const exportBtn = document.getElementById('exportBtn');
+                exportBtn.addEventListener('click', () => this.exportAudio());
+            }
+
+            setMasterVolume(value) {
+                this.tracks.forEach(track => {
+                    if (track.masterGainNode) {
+                        track.masterGainNode.gain.value = value;
+                    }
+                });
+            }
+
+            async exportAudio() {
+                const format = document.getElementById('formatSelect').value;
+                const quality = document.getElementById('qualitySelect').value;
+
+                // Create an offline audio context for rendering
+                const offlineCtx = new OfflineAudioContext(2, 44100 * 60, 44100);
+
+                // Render all tracks
+                const sources = this.tracks.map(track => {
+                    if (track.audioBuffer) {
+                        const source = offlineCtx.createBufferSource();
+                        source.buffer = track.audioBuffer;
+                        source.connect(offlineCtx.destination);
+                        return source;
+                    }
+                    return null;
+                }).filter(Boolean);
+
+                // Start all sources
+                sources.forEach(source => source.start(0));
+
+                // Render the audio
+                const renderedBuffer = await offlineCtx.startRendering();
+
+                // Convert to desired format
+                const audioData = renderedBuffer.getChannelData(0);
+                const blob = new Blob([audioData], { type: `audio/${format}` });
+
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `mixed-audio.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            addTrack() {
+                const track = new AudioTrack(this.trackList);
+                this.tracks.push(track);
+            }
+
+            play() {
+                this.tracks.forEach(track => track.play());
+                this.playBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+            }
+
+            stop() {
+                this.tracks.forEach(track => track.stop());
+                this.playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            }
+
+            rewind() {
+                this.stop();
+                this.tracks.forEach(track => track.wavesurfer.seekTo(0));
+            }
+        }
+
+        // Initialize the studio when the page loads
+        window.addEventListener('load', () => {
+            const studio = new AudioStudio();
+        });
+    </script>
+</body>
+</html>

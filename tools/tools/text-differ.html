@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Difference Checker - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff/5.1.0/diff.min.js"></script>
+    <style>
+        .text-area {
+            resize: none;
+            min-height: 300px;
+            border-radius: 1rem;
+            padding: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            font-family: monospace;
+            border: 2px solid var(--bs-border-color);
+            background: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: all 0.3s ease;
+        }
+        .text-area:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .diff-view {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        .diff-added {
+            background-color: #a3cfbb;
+            color: #0a3622;
+            text-decoration: none;
+            padding: 2px 0;
+        }
+        .diff-removed {
+            background-color: #f1b7c1;
+            color: #842029;
+            text-decoration: line-through;
+            padding: 2px 0;
+        }
+        [data-bs-theme="dark"] .diff-added {
+            background-color: #0a3622;
+            color: #a3cfbb;
+        }
+        [data-bs-theme="dark"] .diff-removed {
+            background-color: #842029;
+            color: #f1b7c1;
+        }
+        .diff-stats {
+            font-size: 0.9rem;
+            color: var(--bs-secondary-color);
+        }
+        .toolbar-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            background: none;
+            color: var(--bs-secondary-color);
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease;
+        }
+        .toolbar-btn:hover {
+            background: var(--bs-secondary-bg);
+            color: var(--bs-primary);
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .character-count {
+            font-size: 0.875rem;
+            color: var(--bs-secondary-color);
+        }
+        .diff-options label {
+            cursor: pointer;
+        }
+        .diff-type-btn.active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-12 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Text Difference Checker</h1>
+                        
+                        <!-- Text Input Areas -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="position-relative">
+                                    <div class="toolbar border-bottom pb-2 mb-2">
+                                        <button class="toolbar-btn" title="Clear Text">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Copy Text">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Paste Text">
+                                            <i class="bi bi-clipboard-plus"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="originalText" class="text-area form-control" placeholder="Enter original text here..."></textarea>
+                                    <div class="character-count mt-2 text-end">0 characters</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="position-relative">
+                                    <div class="toolbar border-bottom pb-2 mb-2">
+                                        <button class="toolbar-btn" title="Clear Text">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Copy Text">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Paste Text">
+                                            <i class="bi bi-clipboard-plus"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="modifiedText" class="text-area form-control" placeholder="Enter modified text here..."></textarea>
+                                    <div class="character-count mt-2 text-end">0 characters</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diff Options -->
+                        <div class="diff-options mt-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary diff-type-btn active" data-diff-type="chars">Character Diff</button>
+                                        <button type="button" class="btn btn-outline-primary diff-type-btn" data-diff-type="words">Word Diff</button>
+                                        <button type="button" class="btn btn-outline-primary diff-type-btn" data-diff-type="lines">Line Diff</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="ignoreWhitespace">
+                                        <label class="form-check-label" for="ignoreWhitespace">Ignore whitespace</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diff Results -->
+                        <div class="diff-results mt-4">
+                            <div class="diff-stats mb-3">
+                                <span class="badge bg-success">Added: <span id="addedCount">0</span></span>
+                                <span class="badge bg-danger">Removed: <span id="removedCount">0</span></span>
+                                <span class="badge bg-primary">Changed: <span id="changedCount">0</span></span>
+                            </div>
+                            <div id="diffView" class="diff-view p-3 rounded border"></div>
+                        </div>
+
+                        <!-- Export Options -->
+                        <div class="export-options mt-4">
+                            <button class="btn btn-primary" id="exportDiff">
+                                <i class="bi bi-download"></i> Export Differences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3">How to Use</h5>
+                        <ol class="mb-0">
+                            <li>Enter or paste the original text in the left text area.</li>
+                            <li>Enter or paste the modified text in the right text area.</li>
+                            <li>Choose the type of diff you want to see (character, word, or line level).</li>
+                            <li>Toggle "Ignore whitespace" if you want to ignore spacing differences.</li>
+                            <li>The differences will be highlighted automatically:</li>
+                            <ul>
+                                <li>Green background: Added text</li>
+                                <li>Red background: Removed text</li>
+                            </ul>
+                            <li>Use the export button to save the differences in a text file.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dark Mode Toggle -->
+    <button class="btn btn-primary rounded-circle p-2 dark-mode-toggle" id="darkModeToggle">
+        <i class="bi bi-sun"></i>
+    </button>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const originalText = document.getElementById('originalText');
+            const modifiedText = document.getElementById('modifiedText');
+            const diffView = document.getElementById('diffView');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const ignoreWhitespace = document.getElementById('ignoreWhitespace');
+            const diffTypeBtns = document.querySelectorAll('.diff-type-btn');
+            const exportDiff = document.getElementById('exportDiff');
+            const characterCounts = document.querySelectorAll('.character-count');
+            const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+
+            let currentDiffType = 'chars';
+
+            // Handle dark mode toggle
+            darkModeToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-bs-theme') === 'dark';
+                html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+                this.innerHTML = `<i class="bi bi-${isDark ? 'moon-stars' : 'sun'}"></i>`;
+                localStorage.setItem('darkMode', !isDark);
+            });
+
+            // Initialize dark mode from localStorage
+            if (localStorage.getItem('darkMode') === 'true') {
+                darkModeToggle.click();
+            }
+
+            // Handle text input and update diffs
+            [originalText, modifiedText].forEach(textarea => {
+                textarea.addEventListener('input', (e) => {
+                    const charCount = e.target.value.length;
+                    e.target.nextElementSibling.textContent = `${charCount} characters`;
+                    updateDiff();
+                });
+            });
+
+            // Handle diff type selection
+            diffTypeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    diffTypeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentDiffType = btn.getAttribute('data-diff-type');
+                    updateDiff();
+                });
+            });
+
+            // Handle ignore whitespace toggle
+            ignoreWhitespace.addEventListener('change', updateDiff);
+
+            // Handle toolbar buttons
+            toolbarBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.getAttribute('title');
+                    const textArea = btn.closest('.col-md-6').querySelector('.text-area');
+                    
+                    switch(action) {
+                        case 'Clear Text':
+                            textArea.value = '';
+                            textArea.dispatchEvent(new Event('input'));
+                            break;
+                        case 'Copy Text':
+                            navigator.clipboard.writeText(textArea.value);
+                            showToast('Text copied to clipboard');
+                            break;
+                        case 'Paste Text':
+                            navigator.clipboard.readText().then(text => {
+                                textArea.value = text;
+                                textArea.dispatchEvent(new Event('input'));
+                            });
+                            break;
+                    }
+                });
+            });
+
+            // Handle export
+            exportDiff.addEventListener('click', () => {
+                const diffContent = diffView.innerText;
+                const blob = new Blob([diffContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'text-differences.txt';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            });
+
+            // Update diff based on current settings
+            function updateDiff() {
+                let text1 = originalText.value;
+                let text2 = modifiedText.value;
+
+                if (ignoreWhitespace.checked) {
+                    text1 = text1.replace(/\s+/g, ' ').trim();
+                    text2 = text2.replace(/\s+/g, ' ').trim();
+                }
+
+                let diff;
+                switch (currentDiffType) {
+                    case 'chars':
+                        diff = Diff.diffChars(text1, text2);
+                        break;
+                    case 'words':
+                        diff = Diff.diffWords(text1, text2);
+                        break;
+                    case 'lines':
+                        diff = Diff.diffLines(text1, text2);
+                        break;
+                }
+
+                let html = '';
+                let added = 0, removed = 0, changed = 0;
+
+                diff.forEach(part => {
+                    const value = part.value;
+                    if (part.added) {
+                        html += `<span class="diff-added">${escapeHtml(value)}</span>`;
+                        added += value.length;
+                        changed++;
+                    } else if (part.removed) {
+                        html += `<span class="diff-removed">${escapeHtml(value)}</span>`;
+                        removed += value.length;
+                        changed++;
+                    } else {
+                        html += escapeHtml(value);
+                    }
+                });
+
+                diffView.innerHTML = html || '<em class="text-muted">No differences found</em>';
+                document.getElementById('addedCount').textContent = added;
+                document.getElementById('removedCount').textContent = removed;
+                document.getElementById('changedCount').textContent = changed;
+            }
+
+            // Helper function to escape HTML
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Show toast message
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = `
+                    <div class="toast-header">
+                        <strong class="me-auto">Text Differ</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                `;
+                document.querySelector('.toast-container').appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+                toast.addEventListener('hidden.bs.toast', () => toast.remove());
+            }
+
+            // Initial diff update
+            updateDiff();
+        });
+    </script>
+</body>
+</html>

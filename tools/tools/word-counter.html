@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Counter - Tools Hub</title>
+    <meta name="description" content="Free online word counter tool. Count words, characters, sentences, and paragraphs in your text.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        #textInput {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .reading-time {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Tools Hub
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Word Counter</h1>
+                        
+                        <div class="mb-4">
+                            <textarea 
+                                class="form-control" 
+                                id="textInput" 
+                                placeholder="Type or paste your text here..."
+                                aria-label="Text input for word count"></textarea>
+                        </div>
+
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-4">
+                            <div class="col">
+                                <div class="card stats-card h-100 text-center">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Words</h6>
+                                        <div class="stat-value" id="wordCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card stats-card h-100 text-center">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Characters</h6>
+                                        <div class="stat-value" id="charCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card stats-card h-100 text-center">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Sentences</h6>
+                                        <div class="stat-value" id="sentenceCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card stats-card h-100 text-center">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Paragraphs</h6>
+                                        <div class="stat-value" id="paragraphCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-subtitle mb-2 text-muted">Estimated Reading Time</h6>
+                                <div class="reading-time" id="readingTime">~ 0 minutes</div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button class="btn btn-primary me-2" id="copyBtn">
+                                <i class="bi bi-clipboard me-2"></i>Copy Text
+                            </button>
+                            <button class="btn btn-outline-secondary" id="clearBtn">
+                                <i class="bi bi-trash me-2"></i>Clear Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Real-time word and character counting</li>
+                            <li>Sentence and paragraph counter</li>
+                            <li>Estimated reading time calculation</li>
+                            <li>Copy text functionality</li>
+                            <li>Works offline - no data is sent to servers</li>
+                            <li>Mobile-friendly interface</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Type or paste your text in the text area</li>
+                            <li>View real-time statistics about your text</li>
+                            <li>Use the copy button to copy your text</li>
+                            <li>Click clear to start over</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <small class="text-muted">&copy; 2025 Tools Hub. All rights reserved.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textInput = document.getElementById('textInput');
+            const wordCount = document.getElementById('wordCount');
+            const charCount = document.getElementById('charCount');
+            const sentenceCount = document.getElementById('sentenceCount');
+            const paragraphCount = document.getElementById('paragraphCount');
+            const readingTime = document.getElementById('readingTime');
+            const copyBtn = document.getElementById('copyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+
+            function updateCounts() {
+                const text = textInput.value;
+                
+                // Word count
+                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+                wordCount.textContent = words.length;
+
+                // Character count
+                charCount.textContent = text.length;
+
+                // Sentence count
+                const sentences = text.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+                sentenceCount.textContent = sentences.length;
+
+                // Paragraph count
+                const paragraphs = text.split('\n\n').filter(para => para.trim().length > 0);
+                paragraphCount.textContent = paragraphs.length;
+
+                // Reading time (assuming average reading speed of 200 words per minute)
+                const minutes = Math.ceil(words.length / 200);
+                readingTime.textContent = `~ ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+            }
+
+            textInput.addEventListener('input', updateCounts);
+
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(textInput.value);
+                    copyBtn.innerHTML = '<i class="bi bi-check2 me-2"></i>Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="bi bi-clipboard me-2"></i>Copy Text';
+                    }, 2000);
+                } catch (err) {
+                    alert('Failed to copy text. Please try again.');
+                }
+            });
+
+            clearBtn.addEventListener('click', () => {
+                textInput.value = '';
+                updateCounts();
+            });
+        });
+    </script>
+</body>
+</html>

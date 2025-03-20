@@ -1,0 +1,12 @@
+{
+  "name": "toos",
+  "version": "1.0.0",
+  "description": "A comprehensive collection of 100+ online tools for various purposes including image processing, SEO, development, calculators, and more.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

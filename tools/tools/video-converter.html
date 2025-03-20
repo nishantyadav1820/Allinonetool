@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Converter - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- FFmpeg.js for video conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/ffmpeg.min.js"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed var(--bs-primary);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: var(--bs-body-bg);
+        }
+        .drop-zone.dragover {
+            background: var(--bs-secondary-bg);
+            border-color: var(--bs-primary-border-subtle);
+        }
+        .preview-container {
+            max-width: 100%;
+            margin: 1rem 0;
+            display: none;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .preview-video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+        }
+        .format-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--bs-border-color);
+            border-radius: 1rem;
+            padding: 1rem;
+            height: 100%;
+        }
+        .format-option:hover {
+            border-color: var(--bs-primary);
+            transform: translateY(-2px);
+        }
+        .format-option.selected {
+            border-color: var(--bs-primary);
+            background: var(--bs-primary-bg-subtle);
+        }
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--bs-primary);
+        }
+        .settings-container {
+            display: none;
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .trim-controls {
+            display: none;
+            margin-top: 1rem;
+        }
+        .trim-slider {
+            height: 2rem;
+            margin: 1rem 0;
+        }
+        .trim-slider .noUi-connect {
+            background: var(--bs-primary);
+        }
+        .trim-time {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .compression-level {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Video Converter</h1>
+                        
+                        <div class="tool-section">
+                            <!-- Upload Section -->
+                            <div class="drop-zone" id="dropZone">
+                                <i class="bi bi-camera-video display-4 text-primary mb-3"></i>
+                                <h5>Drag & Drop your video file here</h5>
+                                <p class="text-muted">or</p>
+                                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                    Choose File
+                                </button>
+                                <input type="file" id="fileInput" hidden accept="video/*">
+                                <p class="text-muted mt-2">
+                                    <small>Supported formats: MP4, AVI, MOV, WMV, FLV, MKV, WEBM</small><br>
+                                    <small>Maximum file size: 500MB</small>
+                                </p>
+                            </div>
+
+                            <!-- File Info -->
+                            <div class="file-info mt-4" id="fileInfo" style="display: none;">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <p class="mb-1"><strong>File Name:</strong> <span id="fileName">-</span></p>
+                                                <p class="mb-0"><strong>File Size:</strong> <span id="fileSize">-</span></p>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <p class="mb-1"><strong>Duration:</strong> <span id="duration">-</span></p>
+                                                <p class="mb-0"><strong>Format:</strong> <span id="format">-</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preview Container -->
+                            <div class="preview-container" id="previewContainer">
+                                <video class="preview-video" id="previewVideo" controls>
+                                    Your browser does not support the video tag.
+                                </video>
+                                
+                                <!-- Trim Controls -->
+                                <div class="trim-controls" id="trimControls">
+                                    <div class="trim-slider" id="trimSlider"></div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="trim-time" id="startTime">00:00</span>
+                                        <span class="trim-time" id="endTime">00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conversion Settings -->
+                            <div class="settings-container mt-4" id="settingsContainer">
+                                <h5 class="mb-3">Conversion Settings</h5>
+
+                                <!-- Format Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label">Output Format:</label>
+                                    <div class="row g-3">
+                                        <div class="col-md-3 col-sm-6">
+                                            <div class="format-option text-center" data-format="mp4">
+                                                <i class="bi bi-file-earmark-play format-icon"></i>
+                                                <h6>MP4</h6>
+                                                <small class="text-muted">Most compatible</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <div class="format-option text-center" data-format="webm">
+                                                <i class="bi bi-globe format-icon"></i>
+                                                <h6>WebM</h6>
+                                                <small class="text-muted">Web optimized</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <div class="format-option text-center" data-format="mov">
+                                                <i class="bi bi-apple format-icon"></i>
+                                                <h6>MOV</h6>
+                                                <small class="text-muted">Apple devices</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <div class="format-option text-center" data-format="gif">
+                                                <i class="bi bi-image format-icon"></i>
+                                                <h6>GIF</h6>
+                                                <small class="text-muted">Animated image</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quality Settings -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Video Quality:</label>
+                                        <select class="form-select" id="qualitySelect">
+                                            <option value="original">Original Quality</option>
+                                            <option value="1080p">1080p (Full HD)</option>
+                                            <option value="720p">720p (HD)</option>
+                                            <option value="480p">480p (SD)</option>
+                                            <option value="360p">360p (Low)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Frame Rate:</label>
+                                        <select class="form-select" id="fpsSelect">
+                                            <option value="original">Original FPS</option>
+                                            <option value="60">60 FPS</option>
+                                            <option value="30">30 FPS</option>
+                                            <option value="24">24 FPS</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Advanced Settings -->
+                                <div class="mb-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="advancedToggle">
+                                        <label class="form-check-label" for="advancedToggle">Show Advanced Settings</label>
+                                    </div>
+                                </div>
+
+                                <div id="advancedSettings" style="display: none;">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Audio Quality:</label>
+                                            <select class="form-select" id="audioQualitySelect">
+                                                <option value="high">High (320 kbps)</option>
+                                                <option value="medium">Medium (192 kbps)</option>
+                                                <option value="low">Low (128 kbps)</option>
+                                                <option value="none">No Audio</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Compression Level:</label>
+                                            <input type="range" class="compression-level form-range" id="compressionLevel" 
+                                                   min="0" max="100" value="50">
+                                            <div class="d-flex justify-content-between">
+                                                <small>Better Quality</small>
+                                                <small>Smaller Size</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="trimVideo">
+                                                <label class="form-check-label" for="trimVideo">
+                                                    Trim Video
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="watermark">
+                                                <label class="form-check-label" for="watermark">
+                                                    Add Watermark
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress mt-4" style="display: none;" id="progressBar">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="progressIndicator">0%</div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary btn-lg" id="convertBtn" disabled>
+                                    <i class="bi bi-arrow-repeat me-2"></i>Convert
+                                </button>
+                                <button class="btn btn-success btn-lg" id="downloadBtn" disabled>
+                                    <i class="bi bi-download me-2"></i>Download
+                                </button>
+                                <button class="btn btn-outline-secondary btn-lg" id="resetBtn">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Upload your video file by dragging it or clicking "Choose File"</li>
+                            <li>Select your desired output format</li>
+                            <li>Adjust quality and advanced settings if needed</li>
+                            <li>Click "Convert" to start the conversion</li>
+                            <li>Download your converted video</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Multiple output formats (MP4, WebM, MOV, GIF)</li>
+                            <li>Quality presets from 360p to 1080p</li>
+                            <li>Frame rate control</li>
+                            <li>Audio quality settings</li>
+                            <li>Video trimming</li>
+                            <li>Watermark option</li>
+                            <li>Fast conversion speed</li>
+                            <li>Preview before converting</li>
+                            <li>Privacy-focused - files processed locally</li>
+                            <li>Support for large files (up to 500MB)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-check-circle-fill text-success display-1 mb-4 animate__animated animate__bounceIn"></i>
+                    <h4 class="mb-3 animate__animated animate__fadeInUp animate__delay-1s">Conversion Successful!</h4>
+                    <p class="mb-4 animate__animated animate__fadeInUp animate__delay-1s">Your video has been converted successfully.</p>
+                    <button type="button" class="btn btn-success btn-lg animate__animated animate__fadeInUp animate__delay-2s" id="modalDownloadBtn">
+                        <i class="bi bi-download me-2"></i>Download Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="btn btn-lg btn-outline-primary rounded-circle dark-mode-toggle" id="darkModeToggle">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wnumb@1.2.0/wNumb.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { createFFmpeg, fetchFile } = FFmpeg;
+            const ffmpeg = createFFmpeg({ log: true });
+            await ffmpeg.load();
+
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const duration = document.getElementById('duration');
+            const format = document.getElementById('format');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewVideo = document.getElementById('previewVideo');
+            const progressBar = document.getElementById('progressBar');
+            const progressIndicator = document.getElementById('progressIndicator');
+            const convertBtn = document.getElementById('convertBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const settingsContainer = document.getElementById('settingsContainer');
+            const qualitySelect = document.getElementById('qualitySelect');
+            const fpsSelect = document.getElementById('fpsSelect');
+            const audioQualitySelect = document.getElementById('audioQualitySelect');
+            const compressionLevel = document.getElementById('compressionLevel');
+            const trimVideo = document.getElementById('trimVideo');
+            const trimControls = document.getElementById('trimControls');
+            const watermark = document.getElementById('watermark');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+
+            let currentVideoFile = null;
+            let selectedFormat = null;
+            let convertedVideo = null;
+            let videoMetadata = null;
+
+            noUiSlider.create(document.getElementById('trimSlider'), {
+                start: [0, 100],
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': 100
+                }
+            });
+
+            darkModeToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-bs-theme') === 'dark';
+                html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+                this.innerHTML = `<i class="bi bi-${isDark ? 'moon-stars' : 'sun'}"></i>`;
+                localStorage.setItem('darkMode', !isDark);
+            });
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                darkModeToggle.click();
+            }
+
+            document.querySelectorAll('.format-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedFormat = option.dataset.format;
+                    convertBtn.disabled = false;
+                });
+            });
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('video/')) {
+                    handleVideoFile(file);
+                } else {
+                    alert('Please upload a video file');
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files[0]) {
+                    handleVideoFile(fileInput.files[0]);
+                }
+            });
+
+            async function handleVideoFile(file) {
+                if (file.size > 500 * 1024 * 1024) { 
+                    alert('File size exceeds 500MB limit');
+                    return;
+                }
+
+                currentVideoFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                format.textContent = file.type.split('/')[1].toUpperCase();
+                
+                const videoUrl = URL.createObjectURL(file);
+                previewVideo.src = videoUrl;
+                
+                await new Promise(resolve => {
+                    previewVideo.onloadedmetadata = () => {
+                        videoMetadata = {
+                            duration: previewVideo.duration,
+                            width: previewVideo.videoWidth,
+                            height: previewVideo.videoHeight
+                        };
+                        duration.textContent = formatDuration(videoMetadata.duration);
+                        resolve();
+                    };
+                });
+
+                fileInfo.style.display = 'block';
+                previewContainer.style.display = 'block';
+                settingsContainer.style.display = 'block';
+
+                document.getElementById('trimSlider').noUiSlider.updateOptions({
+                    range: {
+                        'min': 0,
+                        'max': videoMetadata.duration
+                    }
+                });
+            }
+
+            async function convertVideo() {
+                if (!currentVideoFile || !selectedFormat) return;
+
+                progressBar.style.display = 'block';
+                convertBtn.disabled = true;
+                
+                try {
+                    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(currentVideoFile));
+
+                    const quality = qualitySelect.value;
+                    const fps = fpsSelect.value;
+                    const audioQuality = audioQualitySelect.value;
+                    const compression = compressionLevel.value;
+                    
+                    let outputFilename = 'output.' + selectedFormat;
+                    let command = ['-i', 'input.mp4'];
+
+                    if (quality !== 'original') {
+                        const height = parseInt(quality);
+                        command.push('-vf', `scale=-2:${height}`);
+                    }
+
+                    if (fps !== 'original') {
+                        command.push('-r', fps);
+                    }
+
+                    if (audioQuality === 'none') {
+                        command.push('-an');
+                    } else {
+                        const audioBitrate = {
+                            'high': '320k',
+                            'medium': '192k',
+                            'low': '128k'
+                        }[audioQuality];
+                        command.push('-b:a', audioBitrate);
+                    }
+
+                    const crf = Math.round(51 - (compression * 0.51)); 
+                    command.push('-crf', crf.toString());
+
+                    if (trimVideo.checked && document.getElementById('trimSlider')) {
+                        const [start, end] = document.getElementById('trimSlider').noUiSlider.get();
+                        command.push('-ss', start, '-t', end - start);
+                    }
+
+                    if (watermark.checked) {
+                        command.push('-vf', 'drawtext=text=\'Multi-Tools\':x=10:y=10:fontsize=24:fontcolor=white@0.5');
+                    }
+
+                    command.push('-y', outputFilename);
+
+                    await ffmpeg.run(...command);
+
+                    const data = ffmpeg.FS('readFile', outputFilename);
+                    convertedVideo = new Blob([data.buffer], { type: `video/${selectedFormat}` });
+
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+
+                    downloadBtn.disabled = false;
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    alert('Error converting video. Please try again.');
+                } finally {
+                    progressBar.style.display = 'none';
+                    convertBtn.disabled = false;
+                }
+            }
+
+            function downloadVideo() {
+                if (!convertedVideo) return;
+
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(convertedVideo);
+                link.href = url;
+                link.download = `converted_${Date.now()}.${selectedFormat}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('successModal'));
+                if (modal) modal.hide();
+            }
+
+            function resetTool() {
+                currentVideoFile = null;
+                selectedFormat = null;
+                convertedVideo = null;
+                videoMetadata = null;
+
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                previewContainer.style.display = 'none';
+                settingsContainer.style.display = 'none';
+                progressBar.style.display = 'none';
+                convertBtn.disabled = true;
+                downloadBtn.disabled = true;
+
+                document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+                
+                qualitySelect.value = 'original';
+                fpsSelect.value = 'original';
+                audioQualitySelect.value = 'high';
+                compressionLevel.value = 50;
+                trimVideo.checked = false;
+                trimControls.style.display = 'none';
+                watermark.checked = false;
+
+                document.getElementById('trimSlider').noUiSlider.reset();
+
+                previewVideo.src = '';
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function formatDuration(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            convertBtn.addEventListener('click', convertVideo);
+            downloadBtn.addEventListener('click', downloadVideo);
+            resetBtn.addEventListener('click', resetTool);
+            document.getElementById('modalDownloadBtn').addEventListener('click', downloadVideo);
+
+            ffmpeg.setProgress(({ ratio }) => {
+                const percent = (ratio * 100).toFixed(0);
+                progressIndicator.style.width = percent + '%';
+                progressIndicator.textContent = percent + '%';
+            });
+        });
+    </script>
+</body>
+</html>

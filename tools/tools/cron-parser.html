@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron Expression Parser - Parse and Test Cron Expressions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .next-dates {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .cron-part {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .cron-example {
+            cursor: pointer;
+            padding: 5px 10px;
+            margin: 2px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .cron-example:hover {
+            background-color: #e9ecef;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .cron-builder select {
+            width: auto;
+            display: inline-block;
+        }
+        .human-readable {
+            font-size: 1.1em;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Cron Expression Parser</h1>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="cronExpression" class="form-label">Cron Expression</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="cronExpression" placeholder="* * * * *">
+                        <button class="btn btn-primary" id="parseBtn">Parse</button>
+                    </div>
+                    <div class="form-text">Format: Minute Hour Day Month DayOfWeek</div>
+                    <div id="cronError" class="error-message"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Common Examples</label>
+                    <div class="d-flex flex-wrap">
+                        <div class="cron-example" data-expr="* * * * *">Every minute</div>
+                        <div class="cron-example" data-expr="0 * * * *">Every hour</div>
+                        <div class="cron-example" data-expr="0 0 * * *">Every day at midnight</div>
+                        <div class="cron-example" data-expr="0 9 * * 1-5">Weekdays at 9 AM</div>
+                        <div class="cron-example" data-expr="0 0 1 * *">Monthly at midnight</div>
+                        <div class="cron-example" data-expr="*/15 * * * *">Every 15 minutes</div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>Cron Expression Builder</h5>
+                <div class="cron-builder">
+                    <div class="row">
+                        <div class="col">
+                            <label>Minute:</label>
+                            <select id="minuteSelect" class="form-select">
+                                <option value="*">Every minute (*)</option>
+                                <option value="*/5">Every 5 minutes</option>
+                                <option value="*/15">Every 15 minutes</option>
+                                <option value="*/30">Every 30 minutes</option>
+                                <option value="0">At minute 0</option>
+                                <option value="30">At minute 30</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Hour:</label>
+                            <select id="hourSelect" class="form-select">
+                                <option value="*">Every hour (*)</option>
+                                <option value="*/2">Every 2 hours</option>
+                                <option value="*/4">Every 4 hours</option>
+                                <option value="*/6">Every 6 hours</option>
+                                <option value="*/12">Every 12 hours</option>
+                                <option value="0">At midnight</option>
+                                <option value="12">At noon</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Day:</label>
+                            <select id="daySelect" class="form-select">
+                                <option value="*">Every day (*)</option>
+                                <option value="1">1st day</option>
+                                <option value="15">15th day</option>
+                                <option value="L">Last day</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Month:</label>
+                            <select id="monthSelect" class="form-select">
+                                <option value="*">Every month (*)</option>
+                                <option value="*/3">Every 3 months</option>
+                                <option value="*/6">Every 6 months</option>
+                                <option value="1">January</option>
+                                <option value="6">June</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Day of Week:</label>
+                            <select id="dowSelect" class="form-select">
+                                <option value="*">Every day (*)</option>
+                                <option value="1-5">Weekdays</option>
+                                <option value="0,6">Weekends</option>
+                                <option value="1">Monday</option>
+                                <option value="5">Friday</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Expression Breakdown</h5>
+                        <div id="cronBreakdown">
+                            <div class="cron-part">
+                                <strong>Minutes:</strong> <span id="minuteDesc"></span>
+                            </div>
+                            <div class="cron-part">
+                                <strong>Hours:</strong> <span id="hourDesc"></span>
+                            </div>
+                            <div class="cron-part">
+                                <strong>Days:</strong> <span id="dayDesc"></span>
+                            </div>
+                            <div class="cron-part">
+                                <strong>Months:</strong> <span id="monthDesc"></span>
+                            </div>
+                            <div class="cron-part">
+                                <strong>Days of Week:</strong> <span id="dowDesc"></span>
+                            </div>
+                        </div>
+                        <div class="human-readable" id="humanReadable"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Next 10 Occurrences</h5>
+                        <div class="next-dates" id="nextDates"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        class CronParser {
+            constructor(expression) {
+                this.expression = expression.trim();
+                this.parts = this.expression.split(' ');
+                if (this.parts.length !== 5) {
+                    throw new Error('Invalid cron expression format');
+                }
+            }
+
+            validateRange(value, min, max) {
+                if (value === '*') return true;
+                const numbers = value.split(',');
+                for (const num of numbers) {
+                    if (num.includes('-')) {
+                        const [start, end] = num.split('-').map(Number);
+                        if (isNaN(start) || isNaN(end) || start < min || end > max || start > end) {
+                            return false;
+                        }
+                    } else if (num.includes('/')) {
+                        const [, step] = num.split('/').map(Number);
+                        if (isNaN(step) || step < 1) {
+                            return false;
+                        }
+                    } else {
+                        const n = Number(num);
+                        if (isNaN(n) || n < min || n > max) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            validate() {
+                const [minute, hour, day, month, dow] = this.parts;
+
+                if (!this.validateRange(minute, 0, 59)) throw new Error('Invalid minute format');
+                if (!this.validateRange(hour, 0, 23)) throw new Error('Invalid hour format');
+                if (!this.validateRange(day, 1, 31)) throw new Error('Invalid day format');
+                if (!this.validateRange(month, 1, 12)) throw new Error('Invalid month format');
+                if (!this.validateRange(dow, 0, 6)) throw new Error('Invalid day of week format');
+            }
+
+            getDescription() {
+                return {
+                    minute: this.describePart(this.parts[0], 'minute', 0, 59),
+                    hour: this.describePart(this.parts[1], 'hour', 0, 23),
+                    day: this.describePart(this.parts[2], 'day', 1, 31),
+                    month: this.describePart(this.parts[3], 'month', 1, 12),
+                    dow: this.describePart(this.parts[4], 'day of week', 0, 6)
+                };
+            }
+
+            describePart(part, type, min, max) {
+                if (part === '*') return `Every ${type}`;
+                if (part.includes('/')) {
+                    const [, step] = part.split('/');
+                    return `Every ${step} ${type}s`;
+                }
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-');
+                    return `From ${start} to ${end}`;
+                }
+                if (part.includes(',')) {
+                    return `At ${part.split(',').join(', ')}`;
+                }
+                return `At ${part}`;
+            }
+
+            getHumanReadable() {
+                const desc = this.getDescription();
+                return `Runs ${desc.minute.toLowerCase()}, ${desc.hour.toLowerCase()}, ` +
+                    `${desc.day.toLowerCase()} of the month, ${desc.month.toLowerCase()}, ` +
+                    `${desc.dow.toLowerCase()} of the week`;
+            }
+
+            getNextDates(count = 10) {
+                const dates = [];
+                let current = moment();
+
+                while (dates.length < count) {
+                    current = current.add(1, 'minute');
+                    if (this.matches(current)) {
+                        dates.push(current.clone());
+                    }
+                }
+
+                return dates;
+            }
+
+            matches(date) {
+                const minute = date.minute();
+                const hour = date.hour();
+                const day = date.date();
+                const month = date.month() + 1;
+                const dow = date.day();
+
+                return this.matchesPart(this.parts[0], minute, 0, 59) &&
+                    this.matchesPart(this.parts[1], hour, 0, 23) &&
+                    this.matchesPart(this.parts[2], day, 1, 31) &&
+                    this.matchesPart(this.parts[3], month, 1, 12) &&
+                    this.matchesPart(this.parts[4], dow, 0, 6);
+            }
+
+            matchesPart(part, value, min, max) {
+                if (part === '*') return true;
+                if (part.includes('/')) {
+                    const [, step] = part.split('/').map(Number);
+                    return (value - min) % step === 0;
+                }
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(Number);
+                    return value >= start && value <= end;
+                }
+                if (part.includes(',')) {
+                    return part.split(',').map(Number).includes(value);
+                }
+                return Number(part) === value;
+            }
+        }
+
+        function parseCronExpression() {
+            const expression = document.getElementById('cronExpression').value;
+            const errorDiv = document.getElementById('cronError');
+            
+            try {
+                const parser = new CronParser(expression);
+                parser.validate();
+
+                // Update breakdown
+                const desc = parser.getDescription();
+                document.getElementById('minuteDesc').textContent = desc.minute;
+                document.getElementById('hourDesc').textContent = desc.hour;
+                document.getElementById('dayDesc').textContent = desc.day;
+                document.getElementById('monthDesc').textContent = desc.month;
+                document.getElementById('dowDesc').textContent = desc.dow;
+
+                // Update human-readable description
+                document.getElementById('humanReadable').textContent = parser.getHumanReadable();
+
+                // Update next occurrences
+                const nextDates = parser.getNextDates();
+                document.getElementById('nextDates').innerHTML = nextDates
+                    .map(date => `<div class="mb-2">${date.format('YYYY-MM-DD HH:mm')}</div>`)
+                    .join('');
+
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('parseBtn').addEventListener('click', parseCronExpression);
+
+        // Example clicks
+        document.querySelectorAll('.cron-example').forEach(example => {
+            example.addEventListener('click', () => {
+                document.getElementById('cronExpression').value = example.dataset.expr;
+                parseCronExpression();
+            });
+        });
+
+        // Cron builder
+        const builderSelects = ['minute', 'hour', 'day', 'month', 'dow'];
+        builderSelects.forEach(part => {
+            document.getElementById(`${part}Select`).addEventListener('change', () => {
+                const values = builderSelects.map(p => document.getElementById(`${p}Select`).value);
+                document.getElementById('cronExpression').value = values.join(' ');
+                parseCronExpression();
+            });
+        });
+
+        // Initial parse
+        document.getElementById('cronExpression').value = '* * * * *';
+        parseCronExpression();
+    </script>
+</body>
+</html>

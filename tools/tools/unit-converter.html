@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter - Convert Between Different Units</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .unit-card {
+            transition: all 0.3s ease;
+        }
+        .unit-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .conversion-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .history-item {
+            font-size: 0.9em;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .common-units {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .common-unit {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .common-unit:hover {
+            background-color: #e9ecef;
+        }
+        .swap-btn {
+            margin: 10px 0;
+            transition: transform 0.3s ease;
+        }
+        .swap-btn:hover {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Unit Converter</h1>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="categorySelect">
+                                    <option value="length">Length</option>
+                                    <option value="mass">Mass/Weight</option>
+                                    <option value="temperature">Temperature</option>
+                                    <option value="area">Area</option>
+                                    <option value="volume">Volume</option>
+                                    <option value="speed">Speed</option>
+                                    <option value="time">Time</option>
+                                    <option value="digital">Digital Storage</option>
+                                    <option value="pressure">Pressure</option>
+                                    <option value="energy">Energy</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-5">
+                                <label class="form-label">From</label>
+                                <input type="number" class="form-control mb-2" id="fromValue" placeholder="Enter value">
+                                <select class="form-select" id="fromUnit"></select>
+                                <div class="common-units" id="commonFromUnits"></div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <button class="btn btn-outline-secondary swap-btn" id="swapBtn">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">To</label>
+                                <input type="number" class="form-control mb-2" id="toValue" readonly>
+                                <select class="form-select" id="toUnit"></select>
+                                <div class="common-units" id="commonToUnits"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="formulaDisplay" style="display: none;">
+                                    Formula: <span id="formulaText"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card unit-card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Quick Convert</h5>
+                                <div class="quick-convert" id="quickConvert"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card unit-card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Common Conversions</h5>
+                                <div id="commonConversions"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Conversion History</h5>
+                        <div class="conversion-history" id="conversionHistory"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const unitData = {
+            length: {
+                units: {
+                    mm: { name: 'Millimeters', toBase: x => x / 1000 },
+                    cm: { name: 'Centimeters', toBase: x => x / 100 },
+                    m: { name: 'Meters', toBase: x => x },
+                    km: { name: 'Kilometers', toBase: x => x * 1000 },
+                    in: { name: 'Inches', toBase: x => x * 0.0254 },
+                    ft: { name: 'Feet', toBase: x => x * 0.3048 },
+                    yd: { name: 'Yards', toBase: x => x * 0.9144 },
+                    mi: { name: 'Miles', toBase: x => x * 1609.344 }
+                },
+                baseUnit: 'm',
+                commonUnits: ['m', 'km', 'ft', 'mi']
+            },
+            mass: {
+                units: {
+                    mg: { name: 'Milligrams', toBase: x => x / 1000000 },
+                    g: { name: 'Grams', toBase: x => x / 1000 },
+                    kg: { name: 'Kilograms', toBase: x => x },
+                    t: { name: 'Metric Tons', toBase: x => x * 1000 },
+                    oz: { name: 'Ounces', toBase: x => x * 0.0283495 },
+                    lb: { name: 'Pounds', toBase: x => x * 0.453592 }
+                },
+                baseUnit: 'kg',
+                commonUnits: ['g', 'kg', 'lb', 'oz']
+            },
+            temperature: {
+                units: {
+                    C: {
+                        name: 'Celsius',
+                        toBase: x => x,
+                        fromBase: x => x
+                    },
+                    F: {
+                        name: 'Fahrenheit',
+                        toBase: x => (x - 32) * 5/9,
+                        fromBase: x => x * 9/5 + 32
+                    },
+                    K: {
+                        name: 'Kelvin',
+                        toBase: x => x - 273.15,
+                        fromBase: x => x + 273.15
+                    }
+                },
+                baseUnit: 'C',
+                commonUnits: ['C', 'F', 'K']
+            },
+            area: {
+                units: {
+                    mm2: { name: 'Square Millimeters', toBase: x => x / 1000000 },
+                    cm2: { name: 'Square Centimeters', toBase: x => x / 10000 },
+                    m2: { name: 'Square Meters', toBase: x => x },
+                    km2: { name: 'Square Kilometers', toBase: x => x * 1000000 },
+                    ha: { name: 'Hectares', toBase: x => x * 10000 },
+                    in2: { name: 'Square Inches', toBase: x => x * 0.00064516 },
+                    ft2: { name: 'Square Feet', toBase: x => x * 0.092903 },
+                    ac: { name: 'Acres', toBase: x => x * 4046.86 }
+                },
+                baseUnit: 'm2',
+                commonUnits: ['m2', 'ft2', 'ac', 'ha']
+            },
+            volume: {
+                units: {
+                    ml: { name: 'Milliliters', toBase: x => x / 1000 },
+                    l: { name: 'Liters', toBase: x => x },
+                    m3: { name: 'Cubic Meters', toBase: x => x * 1000 },
+                    gal: { name: 'Gallons (US)', toBase: x => x * 3.78541 },
+                    qt: { name: 'Quarts (US)', toBase: x => x * 0.946353 },
+                    pt: { name: 'Pints (US)', toBase: x => x * 0.473176 },
+                    fl_oz: { name: 'Fluid Ounces (US)', toBase: x => x * 0.0295735 }
+                },
+                baseUnit: 'l',
+                commonUnits: ['l', 'ml', 'gal', 'fl_oz']
+            },
+            speed: {
+                units: {
+                    mps: { name: 'Meters per Second', toBase: x => x },
+                    kph: { name: 'Kilometers per Hour', toBase: x => x / 3.6 },
+                    mph: { name: 'Miles per Hour', toBase: x => x * 0.44704 },
+                    knot: { name: 'Knots', toBase: x => x * 0.514444 }
+                },
+                baseUnit: 'mps',
+                commonUnits: ['kph', 'mph', 'mps']
+            },
+            time: {
+                units: {
+                    ms: { name: 'Milliseconds', toBase: x => x / 1000 },
+                    s: { name: 'Seconds', toBase: x => x },
+                    min: { name: 'Minutes', toBase: x => x * 60 },
+                    h: { name: 'Hours', toBase: x => x * 3600 },
+                    d: { name: 'Days', toBase: x => x * 86400 },
+                    wk: { name: 'Weeks', toBase: x => x * 604800 }
+                },
+                baseUnit: 's',
+                commonUnits: ['s', 'min', 'h', 'd']
+            },
+            digital: {
+                units: {
+                    b: { name: 'Bytes', toBase: x => x },
+                    kb: { name: 'Kilobytes', toBase: x => x * 1024 },
+                    mb: { name: 'Megabytes', toBase: x => x * 1048576 },
+                    gb: { name: 'Gigabytes', toBase: x => x * 1073741824 },
+                    tb: { name: 'Terabytes', toBase: x => x * 1099511627776 }
+                },
+                baseUnit: 'b',
+                commonUnits: ['mb', 'gb', 'tb']
+            },
+            pressure: {
+                units: {
+                    pa: { name: 'Pascal', toBase: x => x },
+                    kpa: { name: 'Kilopascal', toBase: x => x * 1000 },
+                    bar: { name: 'Bar', toBase: x => x * 100000 },
+                    psi: { name: 'PSI', toBase: x => x * 6894.76 },
+                    atm: { name: 'Atmosphere', toBase: x => x * 101325 }
+                },
+                baseUnit: 'pa',
+                commonUnits: ['kpa', 'bar', 'psi']
+            },
+            energy: {
+                units: {
+                    j: { name: 'Joules', toBase: x => x },
+                    kj: { name: 'Kilojoules', toBase: x => x * 1000 },
+                    cal: { name: 'Calories', toBase: x => x * 4.184 },
+                    kcal: { name: 'Kilocalories', toBase: x => x * 4184 },
+                    wh: { name: 'Watt Hours', toBase: x => x * 3600 },
+                    kwh: { name: 'Kilowatt Hours', toBase: x => x * 3600000 }
+                },
+                baseUnit: 'j',
+                commonUnits: ['kj', 'kcal', 'kwh']
+            }
+        };
+
+        let conversionHistory = [];
+
+        function initializeConverter() {
+            const categorySelect = document.getElementById('categorySelect');
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            const fromValue = document.getElementById('fromValue');
+            const swapBtn = document.getElementById('swapBtn');
+
+            // Initialize event listeners
+            categorySelect.addEventListener('change', updateUnits);
+            fromUnit.addEventListener('change', convert);
+            toUnit.addEventListener('change', convert);
+            fromValue.addEventListener('input', convert);
+            swapBtn.addEventListener('click', swapUnits);
+
+            // Initial setup
+            updateUnits();
+            setupCommonUnits();
+            setupQuickConvert();
+        }
+
+        function updateUnits() {
+            const category = document.getElementById('categorySelect').value;
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            const units = unitData[category].units;
+
+            // Clear existing options
+            fromUnit.innerHTML = '';
+            toUnit.innerHTML = '';
+
+            // Add new options
+            for (const [code, unit] of Object.entries(units)) {
+                fromUnit.add(new Option(unit.name, code));
+                toUnit.add(new Option(unit.name, code));
+            }
+
+            // Set default values
+            if (category === 'temperature') {
+                fromUnit.value = 'C';
+                toUnit.value = 'F';
+            } else {
+                toUnit.value = unitData[category].commonUnits[0];
+            }
+
+            setupCommonUnits();
+            convert();
+        }
+
+        function convert() {
+            const category = document.getElementById('categorySelect').value;
+            const fromValue = parseFloat(document.getElementById('fromValue').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+
+            if (isNaN(fromValue)) {
+                document.getElementById('toValue').value = '';
+                return;
+            }
+
+            let result;
+            if (category === 'temperature') {
+                // Special handling for temperature
+                const toCelsius = unitData[category].units[fromUnit].toBase(fromValue);
+                result = unitData[category].units[toUnit].fromBase(toCelsius);
+            } else {
+                // Standard conversion through base unit
+                const toBase = unitData[category].units[fromUnit].toBase(fromValue);
+                const fromBase = toBase / unitData[category].units[toUnit].toBase(1);
+                result = fromBase;
+            }
+
+            document.getElementById('toValue').value = result.toFixed(6);
+            updateFormula(category, fromUnit, toUnit, fromValue, result);
+            addToHistory(fromValue, fromUnit, result, toUnit);
+        }
+
+        function updateFormula(category, fromUnit, toUnit, fromValue, result) {
+            const formulaDisplay = document.getElementById('formulaDisplay');
+            const formulaText = document.getElementById('formulaText');
+            
+            let formula = '';
+            if (category === 'temperature') {
+                if (fromUnit === 'C' && toUnit === 'F') {
+                    formula = `(${fromValue}°C × 9/5) + 32 = ${result.toFixed(2)}°F`;
+                } else if (fromUnit === 'F' && toUnit === 'C') {
+                    formula = `(${fromValue}°F - 32) × 5/9 = ${result.toFixed(2)}°C`;
+                } else if (fromUnit === 'C' && toUnit === 'K') {
+                    formula = `${fromValue}°C + 273.15 = ${result.toFixed(2)}K`;
+                } else if (fromUnit === 'K' && toUnit === 'C') {
+                    formula = `${fromValue}K - 273.15 = ${result.toFixed(2)}°C`;
+                }
+            } else {
+                const unitFrom = unitData[category].units[fromUnit].name;
+                const unitTo = unitData[category].units[toUnit].name;
+                formula = `${fromValue} ${unitFrom} = ${result.toFixed(2)} ${unitTo}`;
+            }
+
+            formulaText.textContent = formula;
+            formulaDisplay.style.display = 'block';
+        }
+
+        function swapUnits() {
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            const fromValue = document.getElementById('fromValue');
+            const toValue = document.getElementById('toValue');
+
+            // Swap units
+            [fromUnit.value, toUnit.value] = [toUnit.value, fromUnit.value];
+
+            // Swap values if both exist
+            if (fromValue.value && toValue.value) {
+                fromValue.value = toValue.value;
+            }
+
+            convert();
+        }
+
+        function setupCommonUnits() {
+            const category = document.getElementById('categorySelect').value;
+            const commonUnits = unitData[category].commonUnits;
+            const commonFromUnits = document.getElementById('commonFromUnits');
+            const commonToUnits = document.getElementById('commonToUnits');
+
+            commonFromUnits.innerHTML = '';
+            commonToUnits.innerHTML = '';
+
+            commonUnits.forEach(unit => {
+                const unitName = unitData[category].units[unit].name;
+                
+                // From units
+                const fromSpan = document.createElement('span');
+                fromSpan.className = 'common-unit';
+                fromSpan.textContent = unit;
+                fromSpan.title = unitName;
+                fromSpan.onclick = () => {
+                    document.getElementById('fromUnit').value = unit;
+                    convert();
+                };
+                commonFromUnits.appendChild(fromSpan);
+
+                // To units
+                const toSpan = document.createElement('span');
+                toSpan.className = 'common-unit';
+                toSpan.textContent = unit;
+                toSpan.title = unitName;
+                toSpan.onclick = () => {
+                    document.getElementById('toUnit').value = unit;
+                    convert();
+                };
+                commonToUnits.appendChild(toSpan);
+            });
+        }
+
+        function setupQuickConvert() {
+            const quickConvert = document.getElementById('quickConvert');
+            const commonConversions = document.getElementById('commonConversions');
+
+            // Common quick conversions
+            const quickConversions = [
+                { from: '1 mile', to: '1.61 kilometers' },
+                { from: '1 pound', to: '0.45 kilograms' },
+                { from: '1 gallon', to: '3.79 liters' }
+            ];
+
+            quickConvert.innerHTML = quickConversions.map(conv => 
+                `<div class="mb-2">${conv.from} = ${conv.to}</div>`
+            ).join('');
+
+            // Common conversion categories
+            const commonCategories = [
+                'Length (m ↔ ft)',
+                'Weight (kg ↔ lb)',
+                'Temperature (°C ↔ °F)'
+            ];
+
+            commonConversions.innerHTML = commonCategories.map(cat => 
+                `<div class="mb-2">${cat}</div>`
+            ).join('');
+        }
+
+        function addToHistory(fromValue, fromUnit, toValue, toUnit) {
+            const category = document.getElementById('categorySelect').value;
+            const fromUnitName = unitData[category].units[fromUnit].name;
+            const toUnitName = unitData[category].units[toUnit].name;
+
+            const conversion = {
+                from: `${fromValue} ${fromUnitName}`,
+                to: `${toValue.toFixed(2)} ${toUnitName}`,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            conversionHistory.unshift(conversion);
+            if (conversionHistory.length > 10) conversionHistory.pop();
+
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyDiv = document.getElementById('conversionHistory');
+            historyDiv.innerHTML = conversionHistory.map(conv => `
+                <div class="history-item">
+                    <small class="text-muted">${conv.timestamp}</small><br>
+                    ${conv.from} = ${conv.to}
+                </div>
+            `).join('');
+        }
+
+        // Initialize the converter when the page loads
+        document.addEventListener('DOMContentLoaded', initializeConverter);
+    </script>
+</body>
+</html>

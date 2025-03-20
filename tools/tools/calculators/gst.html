@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GST Calculator - Calculate GST Amount and Final Price</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .calculator {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .info-box {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .info-box h6 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        .info-box ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        .info-box li:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">GST Calculator</h1>
+        
+        <div class="calculator">
+            <div class="info-box">
+                <h6><i class="bi bi-info-circle"></i> About GST Rates</h6>
+                <ul>
+                    <li><strong>5% GST:</strong> Essential items, branded cereals, branded paneer</li>
+                    <li><strong>12% GST:</strong> Frozen meat products, butter, cheese, mobile phones</li>
+                    <li><strong>18% GST:</strong> Most items including cosmetics, toothpaste, soap</li>
+                    <li><strong>28% GST:</strong> Luxury items, cars, tobacco products</li>
+                </ul>
+            </div>
+
+            <form id="gstForm">
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Original Amount (₹)</label>
+                    <input type="number" class="form-control" id="amount" required min="0" step="0.01" placeholder="Enter amount">
+                    <div class="form-text">Enter the amount without GST</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">GST Rate</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="gstRate" id="gst5" value="5" checked>
+                        <label class="btn btn-outline-primary" for="gst5">5%</label>
+
+                        <input type="radio" class="btn-check" name="gstRate" id="gst12" value="12">
+                        <label class="btn btn-outline-primary" for="gst12">12%</label>
+
+                        <input type="radio" class="btn-check" name="gstRate" id="gst18" value="18">
+                        <label class="btn btn-outline-primary" for="gst18">18%</label>
+
+                        <input type="radio" class="btn-check" name="gstRate" id="gst28" value="28">
+                        <label class="btn btn-outline-primary" for="gst28">28%</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Calculation Type</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="calcType" id="exclusive" value="exclusive" checked>
+                        <label class="btn btn-outline-primary" for="exclusive">Add GST</label>
+
+                        <input type="radio" class="btn-check" name="calcType" id="inclusive" value="inclusive">
+                        <label class="btn btn-outline-primary" for="inclusive">Remove GST</label>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Calculate</button>
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                </div>
+            </form>
+
+            <div class="result" id="result" style="display: none;">
+                <div class="result-item">
+                    <span>Original Amount:</span>
+                    <span id="originalAmount">₹0.00</span>
+                </div>
+                <div class="result-item">
+                    <span>CGST Amount:</span>
+                    <span id="cgstAmount">₹0.00</span>
+                </div>
+                <div class="result-item">
+                    <span>SGST Amount:</span>
+                    <span id="sgstAmount">₹0.00</span>
+                </div>
+                <div class="result-item">
+                    <span>Total GST Amount:</span>
+                    <span id="totalGst">₹0.00</span>
+                </div>
+                <div class="result-item">
+                    <span>Final Amount:</span>
+                    <span id="finalAmount" class="fw-bold">₹0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Format currency function
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Format percentage function
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value / 100);
+        }
+
+        document.getElementById('gstForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('amount').value);
+            const gstRate = parseFloat(document.querySelector('input[name="gstRate"]:checked').value);
+            const calcType = document.querySelector('input[name="calcType"]:checked').value;
+            
+            let originalAmount, gstAmount;
+            
+            if (calcType === 'exclusive') {
+                originalAmount = amount;
+                gstAmount = (originalAmount * gstRate) / 100;
+            } else {
+                // For inclusive GST, calculate original amount by removing GST
+                originalAmount = amount / (1 + (gstRate / 100));
+                gstAmount = amount - originalAmount;
+            }
+            
+            const cgstAmount = gstAmount / 2;
+            const sgstAmount = gstAmount / 2;
+            const finalAmount = originalAmount + gstAmount;
+            
+            updateResults(originalAmount, cgstAmount, sgstAmount, gstAmount, finalAmount);
+            document.getElementById('result').style.display = 'block';
+        });
+
+        function updateResults(originalAmount, cgstAmount, sgstAmount, totalGst, finalAmount) {
+            document.getElementById('originalAmount').textContent = formatCurrency(originalAmount);
+            document.getElementById('cgstAmount').textContent = formatCurrency(cgstAmount);
+            document.getElementById('sgstAmount').textContent = formatCurrency(sgstAmount);
+            document.getElementById('totalGst').textContent = formatCurrency(totalGst);
+            document.getElementById('finalAmount').textContent = formatCurrency(finalAmount);
+        }
+
+        // Reset form handler
+        document.getElementById('gstForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                // Ctrl+Enter to calculate
+                document.querySelector('button[type="submit"]').click();
+            } else if (e.key === 'Escape') {
+                // Escape to clear
+                document.querySelector('button[type="reset"]').click();
+            }
+        });
+    </script>
+</body>
+</html>

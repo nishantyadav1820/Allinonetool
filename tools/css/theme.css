@@ -1,0 +1,71 @@
+:root {
+    /* Light theme colors */
+    --light-bg: #f8fafc;
+    --light-text: #1e293b;
+    --light-navbar-bg: rgba(248, 250, 252, 0.9);
+    --light-card-bg: #ffffff;
+    --light-border: #e2e8f0;
+    --light-shadow: rgba(99, 102, 241, 0.1);
+
+    /* Dark theme colors */
+    --dark-bg: #0f172a;
+    --dark-text: #f1f5f9;
+    --dark-navbar-bg: rgba(15, 23, 42, 0.9);
+    --dark-card-bg: #1e293b;
+    --dark-border: #334155;
+    --dark-shadow: rgba(99, 102, 241, 0.2);
+
+    /* Default to light theme */
+    --bg-color: var(--light-bg);
+    --text-color: var(--light-text);
+    --navbar-bg: var(--light-navbar-bg);
+    --card-bg: var(--light-card-bg);
+    --border-color: var(--light-border);
+    --shadow-color: var(--light-shadow);
+}
+
+[data-bs-theme="dark"] {
+    --bg-color: var(--dark-bg);
+    --text-color: var(--dark-text);
+    --navbar-bg: var(--dark-navbar-bg);
+    --card-bg: var(--dark-card-bg);
+    --border-color: var(--dark-border);
+    --shadow-color: var(--dark-shadow);
+}
+
+/* Theme transition */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar {
+    background-color: var(--navbar-bg) !important;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background-color: var(--border-color);
+}
+
+.theme-toggle i {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover i {
+    transform: rotate(180deg);
+}

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All In One Calculators and Converter With Image, PDFs, Developer Tools</title>
+    <meta name="description" content="Comprehensive collection of calculators, converters, image tools, PDF utilities, and developer tools - all in one place.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="./index.html">
+                <i class="bi bi-tools text-primary"></i> All In One Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="./index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./pages/why-choose-us.html">Why Choose Us</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-grid me-1"></i>Categories
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end animate slideIn" aria-labelledby="categoriesDropdown">
+                            <li><a class="dropdown-item" href="#healthTools"><i class="bi bi-heart-pulse text-danger me-2"></i>Health Tools</a></li>
+                            <li><a class="dropdown-item" href="#imageTools"><i class="bi bi-image text-info me-2"></i>Image Tools</a></li>
+                            <li><a class="dropdown-item" href="#textTools"><i class="bi bi-file-text text-success me-2"></i>Text Tools</a></li>
+                            <li><a class="dropdown-item" href="#documentTools"><i class="bi bi-file-earmark text-warning me-2"></i>Document Tools</a></li>
+                            <li><a class="dropdown-item" href="#mediaTools"><i class="bi bi-play-circle text-danger me-2"></i>Media Tools</a></li>
+                            <li><a class="dropdown-item" href="#developerTools"><i class="bi bi-code-slash text-primary me-2"></i>Developer Tools</a></li>
+                            <li><a class="dropdown-item" href="#utilityTools"><i class="bi bi-tools text-success me-2"></i>Utility Tools</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Share Button -->
+    <div class="share-button-container">
+        <button class="share-button" id="shareMainButton">
+            <i class="bi bi-share-fill"></i>
+        </button>
+        <div class="share-options" id="shareOptions">
+            <button class="share-option whatsapp" onclick="shareOnWhatsApp()">
+                <i class="bi bi-whatsapp"></i>
+            </button>
+            <button class="share-option facebook" onclick="shareOnFacebook()">
+                <i class="bi bi-facebook"></i>
+            </button>
+            <button class="share-option twitter" onclick="shareOnTwitter()">
+                <i class="bi bi-twitter"></i>
+            </button>
+            <button class="share-option copy" onclick="copyLink()">
+                <i class="bi bi-link-45deg"></i>
+            </button>
+        </div>
+    </div>
+
+    <main class="container mt-5 pt-4">
+        <!-- Hero Section -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">All In One Tools</h1>
+            <p class="lead mb-4 hero-tagline">A comprehensive collection of calculators, converters, image tools, PDF utilities, and developer tools - all in one place.</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-container mb-5">
+            <div class="input-group">
+                <input type="text" class="form-control py-2" id="searchInput" 
+                       placeholder="Search tools (e.g. QR code, image resizer)..." aria-label="Search tools">
+            </div>
+        </div>
+
+        <!-- Popular Tools Section -->
+        <section id="popularTools">
+            <div class="category-header" data-category="popular">
+                <div>
+                    <i class="bi bi-star-fill category-icon text-warning"></i>
+                    <span>Popular Tools</span>
+                </div>
+            </div>
+            <div class="category-content show" id="popularToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Health Tools Section -->
+        <section id="healthTools">
+            <div class="category-header" data-category="health">
+                <div>
+                    <i class="bi bi-heart-pulse category-icon text-danger"></i>
+                    <span>Health Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="healthToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Image Tools Section -->
+        <section id="imageTools">
+            <div class="category-header" data-category="image">
+                <div>
+                    <i class="bi bi-image category-icon text-info"></i>
+                    <span>Image Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="imageToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Text Tools Section -->
+        <section id="textTools">
+            <div class="category-header" data-category="text">
+                <div>
+                    <i class="bi bi-file-text category-icon text-success"></i>
+                    <span>Text & Writing Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="textToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Document Tools Section -->
+        <section id="documentTools">
+            <div class="category-header" data-category="document">
+                <div>
+                    <i class="bi bi-file-earmark category-icon text-warning"></i>
+                    <span>Document Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="documentToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Media Tools Section -->
+        <section id="mediaTools">
+            <div class="category-header" data-category="media">
+                <div>
+                    <i class="bi bi-play-circle category-icon text-danger"></i>
+                    <span>Media Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="mediaToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Developer Tools Section -->
+        <section id="developerTools">
+            <div class="category-header" data-category="developer">
+                <div>
+                    <i class="bi bi-code-slash category-icon text-primary"></i>
+                    <span>Developer Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="developerToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Utility Tools Section -->
+        <section id="utilityTools">
+            <div class="category-header" data-category="utility">
+                <div>
+                    <i class="bi bi-gear category-icon text-success"></i>
+                    <span>Utility Tools</span>
+                </div>
+            </div>
+            <div class="category-content" id="utilityToolsList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-light mt-5 py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-3">About ToolVerse</h5>
+                    <p class="text-muted">ToolVerse is your one-stop destination for online tools and utilities. We provide a comprehensive collection of calculators, converters, and developer tools to make your work easier.</p>
+                    <div class="social-links mt-3">
+                        <a href="https://wa.me/919818968808" class="text-muted me-3" target="_blank"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.youtube.com/@NishantYadav18" class="text-muted me-3" target="_blank"><i class="bi bi-youtube"></i></a>
+                        <a href="https://www.youtube.com/@kidslearning1820" class="text-muted me-3" target="_blank"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="./pages/privacy-policy.html" class="text-muted text-decoration-none">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="./pages/terms-of-service.html" class="text-muted text-decoration-none">Terms of Service</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Contact Us</a></li>
+                        <li class="mb-2"><a href="./pages/faq.html" class="text-muted text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="mb-3">Contact Info</h5>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><i class="bi bi-envelope me-2"></i>Nishantyadavmy@gmail.com</li>
+                        <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>West Delhi, India</li>
+                        <li class="mb-2"><i class="bi bi-telephone me-2"></i>+91 9818968808</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; 2025 ToolVerse. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Design by Nishant Yadav</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/tools-data.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/share.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+</html>
+
+<style>
+.share-button-container {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+}
+
+@media (max-width: 576px) {
+    .share-button-container {
+        right: 15px;
+        bottom: 15px;
+    }
+}
+
+.share-button {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #0d6efd;
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 576px) {
+    .share-button {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+.share-button:hover, .share-button:focus {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.share-options {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background: white;
+    border-radius: 15px;
+    padding: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@media (max-width: 576px) {
+    .share-options {
+        bottom: 55px;
+        padding: 10px;
+        gap: 10px;
+    }
+}
+
+.share-options.show {
+    display: flex;
+}
+
+.share-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 576px) {
+    .share-option {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+.share-option:hover, .share-option:focus {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.share-option.whatsapp { background: #25D366; }
+.share-option.facebook { background: #1877F2; }
+.share-option.twitter { background: #1DA1F2; }
+.share-option.copy { background: #6c757d; }
+
+.hero-tagline {
+    background: linear-gradient(45deg, #0d6efd, #6610f2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 700;
+    animation: fadeInUp 1s ease-out;
+    padding: 0 1rem;
+}
+
+@media (max-width: 768px) {
+    .hero-tagline {
+        font-size: 1.1rem;
+        padding: 0 0.5rem;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nav-link {
+    position: relative;
+    padding: 0.5rem 1rem;
+    transition: color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .nav-link {
+        padding: 0.75rem 1rem;
+    }
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #0d6efd;
+    transition: width 0.3s ease-in-out;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waist-to-Hip Ratio Calculator - Health Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .result-card {
+            transition: all 0.3s ease;
+            border: 2px solid var(--bs-border-color);
+            border-radius: 1rem;
+        }
+        .info-icon {
+            cursor: help;
+        }
+        .disclaimer {
+            font-size: 0.9rem;
+            background-color: var(--bs-warning-bg-subtle);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        .measurement-guide {
+            background: var(--bs-info-bg-subtle);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../../index.html">
+                <i class="bi bi-tools text-primary"></i> All In One Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <h1 class="text-center mb-4">Waist-to-Hip Ratio Calculator</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="measurement-guide">
+                            <h5><i class="bi bi-rulers me-2"></i>How to Measure</h5>
+                            <ul class="mb-0">
+                                <li>Waist: Measure at the narrowest part of your waist, usually above your belly button</li>
+                                <li>Hips: Measure at the widest part of your buttocks</li>
+                                <li>Use a flexible tape measure and measure in a relaxed state</li>
+                                <li>Take measurements in the morning before meals</li>
+                            </ul>
+                        </div>
+
+                        <form id="whrForm" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label class="form-label">Gender</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="gender" id="male" value="male" checked>
+                                        <label class="form-check-label" for="male">Male</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                                        <label class="form-check-label" for="female">Female</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="waist" class="form-label">Waist Circumference (cm)</label>
+                                <input type="number" class="form-control" id="waist" required min="50" max="200">
+                                <div class="invalid-feedback">Please enter a valid waist measurement between 50 and 200 cm.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="hip" class="form-label">Hip Circumference (cm)</label>
+                                <input type="number" class="form-control" id="hip" required min="50" max="200">
+                                <div class="invalid-feedback">Please enter a valid hip measurement between 50 and 200 cm.</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Calculate WHR</button>
+                        </form>
+
+                        <div id="resultSection" class="mt-4 d-none">
+                            <div class="result-card p-4 mb-4">
+                                <h4 class="text-center mb-3">Your Results</h4>
+                                <div class="text-center">
+                                    <p class="h2 text-primary mb-2" id="whrResult">0.00</p>
+                                    <p class="h5 mb-3" id="riskLevel">Risk Level</p>
+                                    <div class="progress mb-3" style="height: 20px;">
+                                        <div class="progress-bar" id="whrProgress" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5>WHR Health Risk Categories</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Risk Level</th>
+                                                    <th>Men (WHR)</th>
+                                                    <th>Women (WHR)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Low Risk</td>
+                                                    <td>< 0.90</td>
+                                                    <td>< 0.80</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Moderate Risk</td>
+                                                    <td>0.90 - 0.95</td>
+                                                    <td>0.80 - 0.85</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>High Risk</td>
+                                                    <td>> 0.95</td>
+                                                    <td>> 0.85</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="disclaimer mt-4">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Important Disclaimer</h6>
+                            <p class="mb-0">This calculator provides estimates based on established guidelines. Results should be used as a general guide only and not as a substitute for professional medical advice. Individual body composition varies, and other health factors should be considered. Consult with a healthcare provider for a comprehensive health assessment.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Form validation and calculation
+            const form = document.getElementById('whrForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (form.checkValidity()) {
+                    calculateWHR();
+                }
+                form.classList.add('was-validated');
+            });
+
+            function calculateWHR() {
+                const gender = document.querySelector('input[name="gender"]:checked').value;
+                const waist = parseFloat(document.getElementById('waist').value);
+                const hip = parseFloat(document.getElementById('hip').value);
+
+                const whr = waist / hip;
+
+                // Determine risk level
+                let riskLevel, progressWidth;
+                if (gender === 'male') {
+                    if (whr < 0.90) {
+                        riskLevel = 'Low Risk';
+                        progressWidth = 33;
+                    } else if (whr <= 0.95) {
+                        riskLevel = 'Moderate Risk';
+                        progressWidth = 66;
+                    } else {
+                        riskLevel = 'High Risk';
+                        progressWidth = 100;
+                    }
+                } else {
+                    if (whr < 0.80) {
+                        riskLevel = 'Low Risk';
+                        progressWidth = 33;
+                    } else if (whr <= 0.85) {
+                        riskLevel = 'Moderate Risk';
+                        progressWidth = 66;
+                    } else {
+                        riskLevel = 'High Risk';
+                        progressWidth = 100;
+                    }
+                }
+
+                // Update progress bar color based on risk
+                const progressBar = document.getElementById('whrProgress');
+                progressBar.style.width = `${progressWidth}%`;
+                if (progressWidth <= 33) {
+                    progressBar.className = 'progress-bar bg-success';
+                } else if (progressWidth <= 66) {
+                    progressBar.className = 'progress-bar bg-warning';
+                } else {
+                    progressBar.className = 'progress-bar bg-danger';
+                }
+
+                // Display results
+                document.getElementById('whrResult').textContent = whr.toFixed(2);
+                document.getElementById('riskLevel').textContent = riskLevel;
+                document.getElementById('resultSection').classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMR Calculator - Health Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .result-card {
+            transition: all 0.3s ease;
+            border: 2px solid var(--bs-border-color);
+            border-radius: 1rem;
+        }
+        .info-icon {
+            cursor: help;
+        }
+        .disclaimer {
+            font-size: 0.9rem;
+            background-color: var(--bs-warning-bg-subtle);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../../index.html">
+                <i class="bi bi-tools text-primary"></i> All In One Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <h1 class="text-center mb-4">BMR (Basal Metabolic Rate) Calculator</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <form id="bmrForm" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label class="form-label">Gender</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="gender" id="male" value="male" checked>
+                                        <label class="form-check-label" for="male">Male</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                                        <label class="form-check-label" for="female">Female</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="age" class="form-label">Age (years)</label>
+                                <input type="number" class="form-control" id="age" required min="15" max="80">
+                                <div class="invalid-feedback">Please enter a valid age between 15 and 80 years.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="height" class="form-label">Height (cm)</label>
+                                <input type="number" class="form-control" id="height" required min="130" max="230">
+                                <div class="invalid-feedback">Please enter a valid height between 130 and 230 cm.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="weight" class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" id="weight" required min="30" max="300">
+                                <div class="invalid-feedback">Please enter a valid weight between 30 and 300 kg.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Activity Level <i class="bi bi-info-circle info-icon" data-bs-toggle="tooltip" title="Select your typical activity level for accurate calorie needs calculation"></i></label>
+                                <select class="form-select" id="activityLevel" required>
+                                    <option value="1.2">Sedentary (little or no exercise)</option>
+                                    <option value="1.375">Lightly active (light exercise 1-3 days/week)</option>
+                                    <option value="1.55">Moderately active (moderate exercise 3-5 days/week)</option>
+                                    <option value="1.725">Very active (hard exercise 6-7 days/week)</option>
+                                    <option value="1.9">Extra active (very hard exercise & physical job)</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Calculate BMR</button>
+                        </form>
+
+                        <div id="resultSection" class="mt-4 d-none">
+                            <div class="result-card p-4 mb-4">
+                                <h4 class="text-center mb-3">Your Results</h4>
+                                <div class="row text-center">
+                                    <div class="col-md-6 mb-3">
+                                        <h5>Base BMR</h5>
+                                        <p class="h3 text-primary" id="bmrResult">0</p>
+                                        <p class="text-muted">calories/day</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h5>Daily Calorie Needs</h5>
+                                        <p class="h3 text-success" id="tdeeResult">0</p>
+                                        <p class="text-muted">calories/day</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5>Weight Goals</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Goal</th>
+                                                    <th>Calories per day</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Weight Loss</td>
+                                                    <td id="weightLoss">0</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Maintain Weight</td>
+                                                    <td id="maintain">0</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Weight Gain</td>
+                                                    <td id="weightGain">0</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="disclaimer mt-4">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Important Disclaimer</h6>
+                            <p class="mb-0">This calculator provides estimates based on established formulas. Results should be used as a general guide only and not as a substitute for professional medical advice. Individual needs may vary. Consult with a healthcare provider before making any significant changes to your diet or exercise routine.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Form validation and calculation
+            const form = document.getElementById('bmrForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (form.checkValidity()) {
+                    calculateBMR();
+                }
+                form.classList.add('was-validated');
+            });
+
+            function calculateBMR() {
+                const gender = document.querySelector('input[name="gender"]:checked').value;
+                const age = parseFloat(document.getElementById('age').value);
+                const height = parseFloat(document.getElementById('height').value);
+                const weight = parseFloat(document.getElementById('weight').value);
+                const activityLevel = parseFloat(document.getElementById('activityLevel').value);
+
+                // Mifflin-St Jeor Equation
+                let bmr;
+                if (gender === 'male') {
+                    bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+                } else {
+                    bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+                }
+
+                const tdee = bmr * activityLevel;
+
+                // Display results
+                document.getElementById('bmrResult').textContent = Math.round(bmr);
+                document.getElementById('tdeeResult').textContent = Math.round(tdee);
+                document.getElementById('weightLoss').textContent = Math.round(tdee - 500);
+                document.getElementById('maintain').textContent = Math.round(tdee);
+                document.getElementById('weightGain').textContent = Math.round(tdee + 500);
+
+                document.getElementById('resultSection').classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

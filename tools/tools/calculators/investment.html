@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Calculator - Calculate Returns on Investments and SIPs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        .calculator {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        .nav-pills .nav-link {
+            margin-right: 5px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Investment Calculator</h1>
+        
+        <div class="calculator">
+            <ul class="nav nav-pills mb-3" id="calculatorType" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="sip-tab" data-bs-toggle="pill" data-bs-target="#sip" type="button">SIP Calculator</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="lumpsum-tab" data-bs-toggle="pill" data-bs-target="#lumpsum" type="button">Lumpsum Calculator</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="calculatorTypeContent">
+                <div class="tab-pane fade show active" id="sip" role="tabpanel">
+                    <form id="sipForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="monthlyInvestment" class="form-label">Monthly Investment (₹)</label>
+                                <input type="number" class="form-control" id="monthlyInvestment" required min="100" step="100" value="10000">
+                                <div class="form-text">Minimum: ₹100 per month</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="sipDuration" class="form-label">Investment Duration (years)</label>
+                                <input type="number" class="form-control" id="sipDuration" required min="1" max="40" value="10">
+                                <div class="form-text">Range: 1 - 40 years</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="sipReturn" class="form-label">Expected Return Rate (% per year)</label>
+                                <input type="number" class="form-control" id="sipReturn" required min="1" max="30" step="0.1" value="12">
+                                <div class="form-text">Historical equity returns: 12-15% per year</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="sipInflation" class="form-label">Expected Inflation Rate (%)</label>
+                                <input type="number" class="form-control" id="sipInflation" required min="0" max="20" step="0.1" value="6">
+                                <div class="form-text">Average inflation: 5-7% per year</div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary">Calculate Returns</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="lumpsum" role="tabpanel">
+                    <form id="lumpsumForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="lumpsumAmount" class="form-label">Investment Amount (₹)</label>
+                                <input type="number" class="form-control" id="lumpsumAmount" required min="1000" step="1000" value="100000">
+                                <div class="form-text">Minimum: ₹1000</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lumpsumDuration" class="form-label">Investment Duration (years)</label>
+                                <input type="number" class="form-control" id="lumpsumDuration" required min="1" max="40" value="5">
+                                <div class="form-text">Range: 1 - 40 years</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="lumpsumReturn" class="form-label">Expected Return Rate (% per year)</label>
+                                <input type="number" class="form-control" id="lumpsumReturn" required min="1" max="30" step="0.1" value="12">
+                                <div class="form-text">Historical equity returns: 12-15% per year</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lumpsumInflation" class="form-label">Expected Inflation Rate (%)</label>
+                                <input type="number" class="form-control" id="lumpsumInflation" required min="0" max="20" step="0.1" value="6">
+                                <div class="form-text">Average inflation: 5-7% per year</div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary">Calculate Returns</button>
+                            <button type="reset" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="result" id="result" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="result-item">
+                            <span>Total Investment:</span>
+                            <span id="totalInvestment">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Expected Returns:</span>
+                            <span id="totalReturns">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Maturity Amount:</span>
+                            <span id="maturityAmount" class="fw-bold">₹0</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Inflation Adjusted Value:</span>
+                            <span id="inflationAdjusted">₹0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="investmentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let investmentChart = null;
+
+        // Format currency function
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Format percentage function
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value / 100);
+        }
+
+        document.getElementById('sipForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateSIP();
+        });
+
+        document.getElementById('lumpsumForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateLumpsum();
+        });
+
+        function calculateSIP() {
+            const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value);
+            const duration = parseInt(document.getElementById('sipDuration').value);
+            const returnRate = parseFloat(document.getElementById('sipReturn').value);
+            const inflationRate = parseFloat(document.getElementById('sipInflation').value);
+
+            const monthlyRate = returnRate / (12 * 100);
+            const months = duration * 12;
+            const totalInvestment = monthlyInvestment * months;
+
+            const maturityAmount = monthlyInvestment * 
+                                 ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * 
+                                 (1 + monthlyRate);
+            
+            const totalReturns = maturityAmount - totalInvestment;
+            const inflationAdjusted = maturityAmount / Math.pow(1 + inflationRate/100, duration);
+
+            updateResults(totalInvestment, totalReturns, maturityAmount, inflationAdjusted);
+            updateChart(totalInvestment, totalReturns);
+        }
+
+        function calculateLumpsum() {
+            const amount = parseFloat(document.getElementById('lumpsumAmount').value);
+            const duration = parseInt(document.getElementById('lumpsumDuration').value);
+            const returnRate = parseFloat(document.getElementById('lumpsumReturn').value);
+            const inflationRate = parseFloat(document.getElementById('lumpsumInflation').value);
+
+            const maturityAmount = amount * Math.pow(1 + returnRate/100, duration);
+            const totalReturns = maturityAmount - amount;
+            const inflationAdjusted = maturityAmount / Math.pow(1 + inflationRate/100, duration);
+
+            updateResults(amount, totalReturns, maturityAmount, inflationAdjusted);
+            updateChart(amount, totalReturns);
+        }
+
+        function updateResults(investment, returns, maturity, inflationAdjusted) {
+            document.getElementById('totalInvestment').textContent = formatCurrency(investment);
+            document.getElementById('totalReturns').textContent = formatCurrency(returns);
+            document.getElementById('maturityAmount').textContent = formatCurrency(maturity);
+            document.getElementById('inflationAdjusted').textContent = formatCurrency(inflationAdjusted);
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function updateChart(investment, returns) {
+            const ctx = document.getElementById('investmentChart').getContext('2d');
+            
+            if (investmentChart) {
+                investmentChart.destroy();
+            }
+
+            // Calculate yearly data points
+            const years = [];
+            const investmentData = [];
+            const totalValueData = [];
+            
+            const isLumpsum = document.getElementById('lumpsum').classList.contains('active');
+            const duration = isLumpsum ? 
+                parseInt(document.getElementById('lumpsumDuration').value) :
+                parseInt(document.getElementById('sipDuration').value);
+            const returnRate = isLumpsum ?
+                parseFloat(document.getElementById('lumpsumReturn').value) :
+                parseFloat(document.getElementById('sipReturn').value);
+
+            for (let year = 0; year <= duration; year++) {
+                years.push(`Year ${year}`);
+                if (isLumpsum) {
+                    investmentData.push(investment);
+                    totalValueData.push(investment * Math.pow(1 + returnRate/100, year));
+                } else {
+                    const monthlyInvestment = investment / (duration * 12);
+                    const monthlyRate = returnRate / (12 * 100);
+                    const months = year * 12;
+                    const yearlyInvestment = monthlyInvestment * months;
+                    const yearlyTotal = monthlyInvestment * 
+                        ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * 
+                        (1 + monthlyRate);
+                    investmentData.push(yearlyInvestment);
+                    totalValueData.push(yearlyTotal);
+                }
+            }
+            
+            investmentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Total Investment',
+                        data: investmentData,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        fill: true
+                    },
+                    {
+                        label: 'Total Value',
+                        data: totalValueData,
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + 
+                                           formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Reset form handler
+        document.getElementById('sipForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+            if (investmentChart) {
+                investmentChart.destroy();
+                investmentChart = null;
+            }
+        });
+
+        document.getElementById('lumpsumForm').addEventListener('reset', function() {
+            document.getElementById('result').style.display = 'none';
+            if (investmentChart) {
+                investmentChart.destroy();
+                investmentChart = null;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editor - Multi-Tools</title>
+    <meta name="description" content="Edit images online with filters, effects, cropping, and more. Free online image editor.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .editor-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .img-container {
+            max-height: 500px;
+            margin-bottom: 1rem;
+        }
+        .cropper-container {
+            max-width: 100%;
+        }
+        .filter-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-preview:hover {
+            transform: scale(1.05);
+        }
+        .filter-name {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .range-value {
+            min-width: 3rem;
+            text-align: center;
+            display: inline-block;
+        }
+        .tools-sidebar {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .tool-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+        .tool-btn i {
+            width: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-tools text-primary"></i> Multi-Tools
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <!-- Upload Section -->
+        <div id="uploadSection">
+            <div class="drop-zone mb-4" id="dropZone">
+                <input type="file" id="fileInput" class="d-none" accept="image/*">
+                <div class="upload-prompt">
+                    <i class="bi bi-cloud-arrow-up display-4 text-primary mb-3"></i>
+                    <h5>Drop your image here or click to upload</h5>
+                    <p class="text-muted mb-0">Supports JPG, PNG, GIF, BMP</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Section -->
+        <div id="editorSection" class="d-none">
+            <div class="row">
+                <!-- Tools Sidebar -->
+                <div class="col-md-3">
+                    <div class="tools-sidebar">
+                        <h5 class="mb-3">Tools</h5>
+                        
+                        <!-- Basic Operations -->
+                        <button class="btn btn-outline-primary tool-btn" id="cropBtn">
+                            <i class="bi bi-crop"></i> Crop
+                        </button>
+                        <button class="btn btn-outline-primary tool-btn" id="rotateBtn">
+                            <i class="bi bi-arrow-clockwise"></i> Rotate
+                        </button>
+                        <button class="btn btn-outline-primary tool-btn" id="flipBtn">
+                            <i class="bi bi-arrow-left-right"></i> Flip
+                        </button>
+                        
+                        <!-- Adjustments -->
+                        <h6 class="mt-4 mb-3">Adjustments</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Brightness</label>
+                            <input type="range" class="form-range" id="brightness" min="-100" max="100" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contrast</label>
+                            <input type="range" class="form-range" id="contrast" min="-100" max="100" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Saturation</label>
+                            <input type="range" class="form-range" id="saturation" min="-100" max="100" value="0">
+                        </div>
+                        
+                        <!-- Filters -->
+                        <h6 class="mt-4 mb-3">Filters</h6>
+                        <div class="row g-2" id="filtersList">
+                            <div class="col-6">
+                                <div class="text-center" data-filter="none">
+                                    <img src="#" class="filter-preview" alt="Normal">
+                                    <div class="filter-name">Normal</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center" data-filter="grayscale">
+                                    <img src="#" class="filter-preview" alt="Grayscale">
+                                    <div class="filter-name">Grayscale</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center" data-filter="sepia">
+                                    <img src="#" class="filter-preview" alt="Sepia">
+                                    <div class="filter-name">Sepia</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center" data-filter="blur">
+                                    <img src="#" class="filter-preview" alt="Blur">
+                                    <div class="filter-name">Blur</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Editor Area -->
+                <div class="col-md-9">
+                    <div class="editor-container">
+                        <div class="img-container mb-4">
+                            <img id="imageEditor" src="#" class="img-fluid">
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-outline-secondary" id="resetBtn">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                            </button>
+                            <div>
+                                <button class="btn btn-primary me-2" id="applyBtn">
+                                    <i class="bi bi-check-circle me-2"></i>Apply Changes
+                                </button>
+                                <button class="btn btn-success" id="downloadBtn">
+                                    <i class="bi bi-download me-2"></i>Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const editorSection = document.getElementById('editorSection');
+        const imageEditor = document.getElementById('imageEditor');
+        const filtersList = document.getElementById('filtersList');
+        
+        let cropper = null;
+        let originalImage = null;
+        let currentFilter = 'none';
+
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    imageEditor.src = originalImage.src;
+                    uploadSection.classList.add('d-none');
+                    editorSection.classList.remove('d-none');
+                    initializeEditor();
+                    updateFilterPreviews();
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function initializeEditor() {
+            // Initialize cropper
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(imageEditor, {
+                viewMode: 2,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        }
+
+        // Handle adjustments
+        const adjustments = ['brightness', 'contrast', 'saturation'];
+        adjustments.forEach(adjustment => {
+            const slider = document.getElementById(adjustment);
+            slider.addEventListener('input', updateImage);
+        });
+
+        function updateImage() {
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+
+            imageEditor.style.filter = `
+                brightness(${1 + brightness/100})
+                contrast(${1 + contrast/100})
+                saturate(${1 + saturation/100})
+                ${currentFilter === 'grayscale' ? 'grayscale(1)' : ''}
+                ${currentFilter === 'sepia' ? 'sepia(1)' : ''}
+                ${currentFilter === 'blur' ? 'blur(5px)' : ''}
+            `;
+        }
+
+        // Update filter previews
+        function updateFilterPreviews() {
+            const previews = document.querySelectorAll('.filter-preview');
+            previews.forEach(preview => {
+                preview.src = originalImage.src;
+                const filter = preview.parentElement.dataset.filter;
+                switch(filter) {
+                    case 'grayscale':
+                        preview.style.filter = 'grayscale(1)';
+                        break;
+                    case 'sepia':
+                        preview.style.filter = 'sepia(1)';
+                        break;
+                    case 'blur':
+                        preview.style.filter = 'blur(2px)';
+                        break;
+                    default:
+                        preview.style.filter = 'none';
+                }
+            });
+
+            // Add click handlers
+            document.querySelectorAll('[data-filter]').forEach(filterDiv => {
+                filterDiv.addEventListener('click', () => {
+                    currentFilter = filterDiv.dataset.filter;
+                    updateImage();
+                });
+            });
+        }
+
+        // Handle rotation and flip
+        document.getElementById('rotateBtn').addEventListener('click', () => {
+            cropper.rotate(90);
+        });
+
+        document.getElementById('flipBtn').addEventListener('click', () => {
+            cropper.scaleX(-cropper.getData().scaleX || -1);
+        });
+
+        // Handle crop
+        document.getElementById('cropBtn').addEventListener('click', () => {
+            cropper.setDragMode('crop');
+        });
+
+        // Handle reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Reset adjustments
+            adjustments.forEach(adjustment => {
+                document.getElementById(adjustment).value = 0;
+            });
+            currentFilter = 'none';
+            imageEditor.style.filter = 'none';
+            
+            // Reset cropper
+            cropper.reset();
+            cropper.setDragMode('move');
+        });
+
+        // Handle apply changes
+        document.getElementById('applyBtn').addEventListener('click', () => {
+            const canvas = cropper.getCroppedCanvas();
+            
+            // Apply filters to canvas
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Draw with filters
+            tempCtx.filter = imageEditor.style.filter;
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Update image
+            imageEditor.src = tempCanvas.toDataURL();
+            
+            // Reinitialize editor
+            initializeEditor();
+            
+            // Reset adjustments
+            adjustments.forEach(adjustment => {
+                document.getElementById(adjustment).value = 0;
+            });
+            currentFilter = 'none';
+            imageEditor.style.filter = 'none';
+        });
+
+        // Handle download
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const canvas = cropper.getCroppedCanvas();
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Draw with filters
+            tempCtx.filter = imageEditor.style.filter;
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = tempCanvas.toDataURL();
+            link.click();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Translator - Multi-Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        .language-selector {
+            position: relative;
+            cursor: pointer;
+        }
+        .language-selector:hover {
+            background: var(--bs-secondary-bg);
+        }
+        .swap-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bs-primary);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .swap-btn:hover {
+            transform: translate(-50%, -50%) rotate(180deg);
+            background: var(--bs-primary-hover);
+        }
+        .text-area {
+            resize: none;
+            min-height: 200px;
+            border-radius: 1rem;
+            padding: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            border: 2px solid var(--bs-border-color);
+            background: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            transition: all 0.3s ease;
+        }
+        .text-area:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .character-count {
+            font-size: 0.875rem;
+            color: var(--bs-secondary-color);
+        }
+        .features-list {
+            background: var(--bs-secondary-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        .features-list i {
+            color: var(--bs-primary);
+            margin-right: 0.5rem;
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .language-flag {
+            width: 24px;
+            height: 24px;
+            margin-right: 0.5rem;
+            border-radius: 4px;
+        }
+        .translation-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .history-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            background: var(--bs-secondary-bg);
+        }
+        .pronunciation-btn {
+            background: none;
+            border: none;
+            color: var(--bs-primary);
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease;
+        }
+        .pronunciation-btn:hover {
+            background: var(--bs-primary-bg-subtle);
+        }
+        .toolbar-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            background: none;
+            color: var(--bs-secondary-color);
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease;
+        }
+        .toolbar-btn:hover {
+            background: var(--bs-secondary-bg);
+            color: var(--bs-primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">Multi-Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5 pt-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h1 class="h3 mb-4 text-center">Text Translator</h1>
+                        
+                        <!-- Language Selection -->
+                        <div class="row g-3 mb-4 position-relative">
+                            <div class="col-md-5">
+                                <div class="language-selector p-3 rounded border">
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://flagcdn.com/w40/us.png" alt="English" class="language-flag">
+                                        <select class="form-select border-0 bg-transparent" id="sourceLanguage">
+                                            <option value="auto">Auto Detect</option>
+                                            <option value="en">English</option>
+                                            <option value="es">Spanish</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                            <option value="it">Italian</option>
+                                            <option value="pt">Portuguese</option>
+                                            <option value="ru">Russian</option>
+                                            <option value="zh">Chinese</option>
+                                            <option value="ja">Japanese</option>
+                                            <option value="ko">Korean</option>
+                                            <option value="hi">Hindi</option>
+                                            <option value="ar">Arabic</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="swap-btn" id="swapLanguages">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </button>
+
+                            <div class="col-md-5">
+                                <div class="language-selector p-3 rounded border">
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://flagcdn.com/w40/es.png" alt="Spanish" class="language-flag">
+                                        <select class="form-select border-0 bg-transparent" id="targetLanguage">
+                                            <option value="es">Spanish</option>
+                                            <option value="en">English</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                            <option value="it">Italian</option>
+                                            <option value="pt">Portuguese</option>
+                                            <option value="ru">Russian</option>
+                                            <option value="zh">Chinese</option>
+                                            <option value="ja">Japanese</option>
+                                            <option value="ko">Korean</option>
+                                            <option value="hi">Hindi</option>
+                                            <option value="ar">Arabic</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Translation Area -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="position-relative">
+                                    <div class="toolbar border-bottom pb-2 mb-2">
+                                        <button class="toolbar-btn" title="Clear Text">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Copy Text">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Paste Text">
+                                            <i class="bi bi-clipboard-plus"></i>
+                                        </button>
+                                    </div>
+                                    <textarea class="text-area w-100" id="sourceText" 
+                                              placeholder="Enter text to translate..."></textarea>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <button class="pronunciation-btn">
+                                            <i class="bi bi-volume-up"></i> Listen
+                                        </button>
+                                        <span class="character-count">0/5000 characters</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="position-relative">
+                                    <div class="toolbar border-bottom pb-2 mb-2">
+                                        <button class="toolbar-btn" title="Copy Translation">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Share Translation">
+                                            <i class="bi bi-share"></i>
+                                        </button>
+                                        <button class="toolbar-btn" title="Save to Favorites">
+                                            <i class="bi bi-star"></i>
+                                        </button>
+                                    </div>
+                                    <div class="text-area w-100" id="translatedText"></div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <button class="pronunciation-btn">
+                                            <i class="bi bi-volume-up"></i> Listen
+                                        </button>
+                                        <button class="btn btn-link p-0" data-bs-toggle="modal" 
+                                                data-bs-target="#alternativesModal">
+                                            Show alternatives
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Features -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="features-list">
+                                    <h5 class="mb-3">Additional Features</h5>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="bi bi-camera"></i> 
+                                            <a href="#" class="text-decoration-none">Translate from image</a>
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-mic"></i>
+                                            <a href="#" class="text-decoration-none">Voice translation</a>
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                            <a href="#" class="text-decoration-none">Document translation</a>
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-phone"></i>
+                                            <a href="#" class="text-decoration-none">Offline translation</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="features-list">
+                                    <h5 class="mb-3">Recent Translations</h5>
+                                    <div class="translation-history">
+                                        <div class="history-item p-2 rounded mb-2">
+                                            <div class="small text-muted">English → Spanish</div>
+                                            <div class="mt-1">Hello world → Hola mundo</div>
+                                        </div>
+                                        <div class="history-item p-2 rounded mb-2">
+                                            <div class="small text-muted">Spanish → English</div>
+                                            <div class="mt-1">Buenos días → Good morning</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">How to Use</h2>
+                        <ol class="mb-0">
+                            <li>Select your source language or use auto-detect</li>
+                            <li>Choose your target language</li>
+                            <li>Enter or paste your text</li>
+                            <li>View the translation instantly</li>
+                            <li>Use additional features like text-to-speech or image translation</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="card mt-4 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3">Features</h2>
+                        <ul class="mb-0">
+                            <li>Support for 100+ languages</li>
+                            <li>Auto language detection</li>
+                            <li>Text-to-speech functionality</li>
+                            <li>Image translation capability</li>
+                            <li>Document translation support</li>
+                            <li>Translation history</li>
+                            <li>Alternative translations</li>
+                            <li>Offline mode available</li>
+                            <li>Real-time translation</li>
+                            <li>Cross-platform compatibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Alternatives Modal -->
+    <div class="modal fade" id="alternativesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Alternative Translations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group">
+                        <button class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <span>Alternative 1</span>
+                                <small class="text-muted">Most common</small>
+                            </div>
+                        </button>
+                        <button class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <span>Alternative 2</span>
+                                <small class="text-muted">Formal</small>
+                            </div>
+                        </button>
+                        <button class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <span>Alternative 3</span>
+                                <small class="text-muted">Informal</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="btn btn-lg btn-outline-primary rounded-circle dark-mode-toggle" id="darkModeToggle">
+        <i class="bi bi-moon-stars"></i>
+    </button>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sourceLanguage = document.getElementById('sourceLanguage');
+            const targetLanguage = document.getElementById('targetLanguage');
+            const sourceText = document.getElementById('sourceText');
+            const translatedText = document.getElementById('translatedText');
+            const swapLanguagesBtn = document.getElementById('swapLanguages');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const characterCount = document.querySelector('.character-count');
+            const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+            const pronunciationBtns = document.querySelectorAll('.pronunciation-btn');
+
+            // Handle dark mode toggle
+            darkModeToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-bs-theme') === 'dark';
+                html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+                this.innerHTML = `<i class="bi bi-${isDark ? 'moon-stars' : 'sun'}"></i>`;
+                localStorage.setItem('darkMode', !isDark);
+            });
+
+            // Initialize dark mode from localStorage
+            if (localStorage.getItem('darkMode') === 'true') {
+                darkModeToggle.click();
+            }
+
+            // Handle language swap
+            swapLanguagesBtn.addEventListener('click', () => {
+                const tempLang = sourceLanguage.value;
+                sourceLanguage.value = targetLanguage.value;
+                targetLanguage.value = tempLang;
+                
+                const tempText = sourceText.value;
+                sourceText.value = translatedText.textContent;
+                translatedText.textContent = tempText;
+
+                if (sourceText.value) {
+                    translateText(sourceText.value);
+                }
+            });
+
+            // Handle text input and translation
+            let translationTimeout;
+            sourceText.addEventListener('input', (e) => {
+                const text = e.target.value;
+                const charCount = text.length;
+                characterCount.textContent = `${charCount}/5000 characters`;
+
+                clearTimeout(translationTimeout);
+                translationTimeout = setTimeout(() => {
+                    if (text.trim()) {
+                        translateText(text);
+                    } else {
+                        translatedText.textContent = '';
+                    }
+                }, 500);
+            });
+
+            // Translation function using Google Translate API
+            async function translateText(text) {
+                if (!text.trim()) return;
+
+                const sourceLang = sourceLanguage.value === 'auto' ? 'auto' : sourceLanguage.value;
+                const targetLang = targetLanguage.value;
+                
+                try {
+                    translatedText.textContent = 'Translating...';
+                    
+                    // Use Google Translate API endpoint
+                    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data && data[0]) {
+                        // Combine all translated parts
+                        const translation = data[0]
+                            .map(part => part[0])
+                            .filter(Boolean)
+                            .join(' ');
+                            
+                        translatedText.textContent = translation;
+                        saveToHistory(text, translation);
+
+                        // Show detected language if auto-detect was used
+                        if (sourceLang === 'auto' && data[2]) {
+                            const detectedLang = data[2];
+                            const langOption = Array.from(sourceLanguage.options).find(opt => opt.value === detectedLang);
+                            if (langOption) {
+                                showToast(`Detected language: ${langOption.text}`);
+                            }
+                        }
+                    } else {
+                        throw new Error('Translation failed');
+                    }
+                } catch (error) {
+                    console.error('Translation error:', error);
+                    translatedText.textContent = 'Error translating text. Please try again.';
+                    showToast('Translation error: ' + error.message);
+                }
+            }
+
+            // Handle toolbar buttons
+            toolbarBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.getAttribute('title');
+                    const textArea = btn.closest('.col-md-6').querySelector('.text-area');
+                    
+                    switch(action) {
+                        case 'Clear Text':
+                            textArea.value = '';
+                            textArea.dispatchEvent(new Event('input'));
+                            break;
+                        case 'Copy Text':
+                        case 'Copy Translation':
+                            navigator.clipboard.writeText(textArea.value || textArea.textContent);
+                            showToast('Text copied to clipboard');
+                            break;
+                        case 'Paste Text':
+                            navigator.clipboard.readText().then(text => {
+                                textArea.value = text;
+                                textArea.dispatchEvent(new Event('input'));
+                            });
+                            break;
+                        case 'Share Translation':
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'Translation',
+                                    text: translatedText.textContent
+                                });
+                            }
+                            break;
+                        case 'Save to Favorites':
+                            saveFavorite();
+                            break;
+                    }
+                });
+            });
+
+            // Handle pronunciation buttons
+            pronunciationBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const text = btn.closest('.col-md-6').querySelector('.text-area').value || 
+                               btn.closest('.col-md-6').querySelector('.text-area').textContent;
+                    const lang = btn.closest('.col-md-6').querySelector('select')?.value || 'en';
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = lang;
+                    window.speechSynthesis.speak(utterance);
+                });
+            });
+
+            // Save to translation history
+            function saveToHistory(source, translated) {
+                const historyContainer = document.querySelector('.translation-history');
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item p-2 rounded mb-2 animate__animated animate__fadeIn';
+                historyItem.innerHTML = `
+                    <div class="small text-muted">${sourceLanguage.value} → ${targetLanguage.value}</div>
+                    <div class="mt-1">${source} → ${translated}</div>
+                `;
+                
+                historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+                if (historyContainer.children.length > 10) {
+                    historyContainer.removeChild(historyContainer.lastChild);
+                }
+            }
+
+            // Show toast message
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast position-fixed bottom-0 end-0 m-3';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = `
+                    <div class="toast-header">
+                        <strong class="me-auto">Translator</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                `;
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+                toast.addEventListener('hidden.bs.toast', () => toast.remove());
+            }
+
+            // Save to favorites
+            function saveFavorite() {
+                const favorites = JSON.parse(localStorage.getItem('translationFavorites') || '[]');
+                const translation = {
+                    source: sourceText.value,
+                    translated: translatedText.textContent,
+                    sourceLang: sourceLanguage.value,
+                    targetLang: targetLanguage.value,
+                    timestamp: new Date().toISOString()
+                };
+                
+                favorites.unshift(translation);
+                if (favorites.length > 50) favorites.pop();
+                localStorage.setItem('translationFavorites', JSON.stringify(favorites));
+                showToast('Translation saved to favorites');
+            }
+
+            // Load favorites on startup
+            const favorites = JSON.parse(localStorage.getItem('translationFavorites') || '[]');
+            if (favorites.length > 0) {
+                const historyContainer = document.querySelector('.translation-history');
+                favorites.slice(0, 5).forEach(fav => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item p-2 rounded mb-2';
+                    historyItem.innerHTML = `
+                        <div class="small text-muted">${fav.sourceLang} → ${fav.targetLang}</div>
+                        <div class="mt-1">${fav.source} → ${fav.translated}</div>
+                    `;
+                    historyContainer.appendChild(historyItem);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

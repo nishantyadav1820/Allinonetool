@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Debugger - Decode and Verify JWT Tokens</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .jwt-part {
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+        .jwt-header, .jwt-payload, .jwt-signature {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .jwt-header {
+            background-color: #e3f2fd;
+        }
+        .jwt-payload {
+            background-color: #f3e5f5;
+        }
+        .jwt-signature {
+            background-color: #fbe9e7;
+        }
+        .verification-result {
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .valid {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .invalid {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">JWT Debugger</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="jwtInput" class="form-label">Enter JWT Token</label>
+                    <textarea class="form-control" id="jwtInput" rows="3" placeholder="Paste your JWT token here"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="secretKey" class="form-label">Secret Key (optional, for verification)</label>
+                    <input type="text" class="form-control" id="secretKey" placeholder="Enter your secret key">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Algorithm</label>
+                    <select class="form-select" id="algorithm">
+                        <option value="HS256">HS256</option>
+                        <option value="HS384">HS384</option>
+                        <option value="HS512">HS512</option>
+                        <option value="RS256">RS256</option>
+                        <option value="RS384">RS384</option>
+                        <option value="RS512">RS512</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" id="decodeBtn">Decode Token</button>
+                <button class="btn btn-success" id="verifyBtn">Verify Signature</button>
+            </div>
+        </div>
+
+        <div id="decodedOutput" style="display: none;">
+            <h3>Decoded Token</h3>
+            
+            <div class="jwt-part">
+                <h5>Header</h5>
+                <div class="jwt-header" id="headerOutput"></div>
+            </div>
+
+            <div class="jwt-part">
+                <h5>Payload</h5>
+                <div class="jwt-payload" id="payloadOutput"></div>
+            </div>
+
+            <div class="jwt-part">
+                <h5>Signature</h5>
+                <div class="jwt-signature" id="signatureOutput"></div>
+            </div>
+
+            <div id="verificationResult" class="verification-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.27/jsrsasign-all-min.js"></script>
+
+    <script>
+        function base64UrlDecode(str) {
+            // Add padding
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) {
+                str += '=';
+            }
+            return atob(str);
+        }
+
+        function parseJWT(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    throw new Error('Invalid JWT format');
+                }
+
+                return {
+                    header: JSON.parse(base64UrlDecode(parts[0])),
+                    payload: JSON.parse(base64UrlDecode(parts[1])),
+                    signature: parts[2]
+                };
+            } catch (error) {
+                throw new Error('Failed to parse JWT: ' + error.message);
+            }
+        }
+
+        function verifyJWT(token, secret, algorithm) {
+            try {
+                const isRSA = algorithm.startsWith('RS');
+                let key;
+
+                if (isRSA) {
+                    // For RSA, the secret should be a public key
+                    key = KEYUTIL.getKey(secret);
+                } else {
+                    // For HMAC, use the secret as is
+                    key = secret;
+                }
+
+                const isValid = KJUR.jws.JWS.verify(token, key, [algorithm]);
+                return isValid;
+            } catch (error) {
+                console.error('Verification error:', error);
+                return false;
+            }
+        }
+
+        function formatJSON(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        function showVerificationResult(isValid) {
+            const resultDiv = document.getElementById('verificationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'verification-result ' + (isValid ? 'valid' : 'invalid');
+            resultDiv.innerHTML = isValid ? 
+                '<strong>✓ Signature Valid:</strong> The token signature is valid.' :
+                '<strong>✗ Signature Invalid:</strong> The token signature could not be verified.';
+        }
+
+        document.getElementById('decodeBtn').addEventListener('click', () => {
+            const token = document.getElementById('jwtInput').value.trim();
+            const outputDiv = document.getElementById('decodedOutput');
+            
+            try {
+                const decoded = parseJWT(token);
+                
+                document.getElementById('headerOutput').textContent = formatJSON(decoded.header);
+                document.getElementById('payloadOutput').textContent = formatJSON(decoded.payload);
+                document.getElementById('signatureOutput').textContent = decoded.signature;
+                
+                outputDiv.style.display = 'block';
+                document.getElementById('verificationResult').style.display = 'none';
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        document.getElementById('verifyBtn').addEventListener('click', () => {
+            const token = document.getElementById('jwtInput').value.trim();
+            const secret = document.getElementById('secretKey').value;
+            const algorithm = document.getElementById('algorithm').value;
+
+            if (!secret) {
+                alert('Please enter a secret key for verification');
+                return;
+            }
+
+            const isValid = verifyJWT(token, secret, algorithm);
+            showVerificationResult(isValid);
+            document.getElementById('decodedOutput').style.display = 'block';
+        });
+
+        // Example token for demonstration
+        const exampleToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+        document.getElementById('jwtInput').placeholder = `Paste your JWT token here\nExample token:\n${exampleToken}`;
+    </script>
+</body>
+</html>
